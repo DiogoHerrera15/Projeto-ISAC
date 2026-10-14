@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   ISAC Market — tokens visuais
+   Inspiração: plaquinhas de preço da feira e o mar do Cabo de Santo Agostinho.
+   --------------------------------------------------------------------------- */
+@theme {
+  --font-display: "Big Shoulders Display", "Arial Narrow", sans-serif;
+  --font-sans: "Figtree", system-ui, sans-serif;
+
+  --color-mar: #0e4d5c;          /* cor principal: botões, cabeçalho, links */
+  --color-mar-escuro: #0a3540;
+  --color-mar-claro: #dcebee;
+  --color-maracuja: #f2b705;     /* etiquetas de preço e destaques */
+  --color-maracuja-claro: #fff1bf;
+  --color-maresia: #f3f7f7;      /* fundo da página */
+  --color-tinta: #132a30;        /* texto principal */
+  --color-tinta-suave: #4b5f65;  /* texto secundário */
+  --color-linha: #d3dfe1;        /* bordas */
+  --color-alerta: #b42318;
+  --color-alerta-claro: #fdecea;
+  --color-ok: #1e6e47;
+  --color-ok-claro: #e3f3ea;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-maresia text-tinta font-sans antialiased;
+    font-size: 1.0625rem;
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    @apply font-display text-tinta;
+    line-height: 1.02;
+    letter-spacing: 0.005em;
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-maracuja);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  ::selection {
+    background: var(--color-maracuja);
+    color: var(--color-tinta);
+  }
+}
+
+@layer components {
+  /* Etiqueta de preço no formato das plaquinhas de feira */
+  .etiqueta {
+    @apply relative inline-flex items-baseline gap-1 bg-maracuja text-tinta font-display font-extrabold;
+    padding: 0.2em 0.65em 0.2em 1.15em;
+    clip-path: polygon(0.7em 0, 100% 0, 100% 100%, 0.7em 100%, 0 50%);
+    line-height: 1;
+  }
+  .etiqueta::before {
+    content: "";
+    position: absolute;
+    left: 0.55em;
+    top: 50%;
+    width: 0.32em;
+    height: 0.32em;
+    margin-top: -0.16em;
+    border-radius: 999px;
+    background: var(--color-maresia);
+  }
+  .etiqueta-sobre-branco::before {
+    background: #fff;
+  }
+  .etiqueta-sobre-mar::before {
+    background: var(--color-mar);
+  }
+
+  /* Padrão de azulejo usado nas imagens de produtos sem foto */
+  .azulejo {
+    background-image:
+      radial-gradient(circle at 0 0, rgb(255 255 255 / 0.16) 0 22%, transparent 23%),
+      radial-gradient(circle at 100% 100%, rgb(255 255 255 / 0.16) 0 22%, transparent 23%),
+      radial-gradient(circle at 50% 50%, transparent 0 30%, rgb(255 255 255 / 0.1) 31% 33%, transparent 34%);
+    background-size: 56px 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
