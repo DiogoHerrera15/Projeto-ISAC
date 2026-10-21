@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os'
 import { createPool } from '../../src/db/pool.js'
 import { migrate } from '../../src/db/migrate.js'
 import { createApp } from '../../src/app.js'
-import { tokenHash } from '../../src/modules/auth/sessions.js'
+import { tokenHash } from '../../src/modules/auth/tokens.js'
 
 export async function criarCenario(t) {
   const url = process.env.TEST_DATABASE_URL

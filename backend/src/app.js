@@ -9,7 +9,7 @@ import { registerStoreRoutes } from './modules/lojas/routes.js'
 import { registerProductRoutes } from './modules/produtos/routes.js'
 import { registerCartRoutes } from './modules/carrinho/routes.js'
 import { registerOrderRoutes } from './modules/pedidos/routes.js'
-import { registerSalesRoutes } from './modules/lojas/vendas.js'
+import { registerSalesRoutes } from './modules/lojas/routes.js'
 import { registerAdminRoutes } from './modules/admin/routes.js'
 import { registerImageRoutes } from './modules/imagens/routes.js'
 
