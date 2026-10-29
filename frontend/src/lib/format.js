@@ -22,7 +22,7 @@ export function mensagemDeErro(erro) {
     [/Invalid login credentials/i, 'E-mail ou senha incorretos.'],
     [/Email not confirmed/i, 'Confirme seu e-mail pelo link que enviamos antes de entrar.'],
     [/User already registered/i, 'Já existe uma conta com este e-mail. Entre com sua senha.'],
-    [/Password should be at least/i, 'A senha precisa ter pelo menos 6 caracteres.'],
+    [/Password should be at least/i, 'A senha precisa ter pelo menos 8 caracteres.'],
     [/carrinho esta vazio/i, 'Seu carrinho está vazio.'],
     [/Estoque insuficiente para: (.*)/i, (m) => `Não há estoque suficiente de “${m[1]}”. Diminua a quantidade.`],
     [/Produto ou loja indisponivel: (.*)/i, (m) => `“${m[1]}” não está mais disponível. Remova do carrinho para continuar.`],
