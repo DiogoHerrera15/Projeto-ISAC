@@ -1,7 +1,13 @@
 # ISAC Market — Frontend
 
-Interface web do ISAC Market em **React + Vite + Tailwind CSS**, ligada ao banco
-Supabase definido em `../database/ISAC_Market_banco_supabase.sql`.
+Interface web do ISAC Market em **React + Vite + Tailwind CSS**. Ela pode usar três
+fontes de dados, escolhidas pela variável `VITE_MODO` (ver `.env.example`):
+
+| `VITE_MODO` | Fonte dos dados |
+|---|---|
+| `backend` (padrão) | API Node do projeto (`../backend`, rotas `/api/v1`). |
+| `demo` | Dados de exemplo no próprio navegador, sem servidor. |
+| `supabase` | Banco Supabase definido em `../database/ISAC_Market_banco_supabase.sql`. |
 
 ## Como rodar
 
@@ -15,9 +21,16 @@ npm run dev
 
 Abra o endereço que aparecer no terminal (normalmente http://localhost:5173).
 
-### Modo demonstração (sem Supabase)
+### Rodando com o backend
 
-Sem o arquivo `.env.local`, o site abre em **modo demonstração**: usa dados de
+Suba o backend (instruções no README principal) e rode `npm run dev` aqui. O Vite
+encaminha `/api` para `http://localhost:3001`. Abra o site pelo endereço configurado em
+`APP_ORIGIN` no `backend/.env` (padrão `http://localhost:5173`). Contas de exemplo do
+backend: `cliente@exemplo.com`, `lucia@exemplo.com` e `admin@isac.org`, senha `isac1234`.
+
+### Modo demonstração (sem backend)
+
+Com `VITE_MODO=demo` no `.env.local`, o site abre em **modo demonstração**: usa dados de
 exemplo salvos no próprio navegador e reproduz as regras do banco (comissão
 calculada ao finalizar, estoque reservado, cancelamento devolve estoque,
 confirmação só pelo administrador). Serve para apresentar e desenvolver as telas
@@ -36,9 +49,9 @@ A faixa amarela no topo tem o botão **Restaurar dados de exemplo**.
 ### Conectando ao Supabase
 
 1. Rode o SQL de `database/` num projeto Supabase novo (ver README principal).
-2. Copie `.env.example` para `.env.local` e preencha com
+2. Copie `.env.example` para `.env.local`, defina `VITE_MODO=supabase` e preencha com
    **Project Settings → API**: a URL do projeto e a chave pública `anon`.
-3. Reinicie o `npm run dev`. A faixa de demonstração some e o site passa a usar o banco.
+3. Reinicie o `npm run dev`. O site passa a usar o banco do Supabase.
 4. Para ter um administrador, crie a conta pelo site e, no SQL Editor:
    ```sql
    update public.perfis set administrador = true
@@ -79,7 +92,8 @@ frontend/
 │   ├── lib/          # Cliente Supabase e formatação (moeda, datas, erros)
 │   ├── pages/        # Uma página por rota
 │   └── services/
-│       ├── api.js          # escolhe Supabase ou demonstração
+│       ├── api.js          # escolhe backend, Supabase ou demonstração (VITE_MODO)
+│       ├── backendApi.js   # chamadas à API Node (/api/v1)
 │       ├── supabaseApi.js  # consultas e chamadas rpc ao banco
 │       ├── demoApi.js      # mesma interface, dados no navegador
 │       └── demoSeed.js     # dados de exemplo
@@ -95,7 +109,9 @@ banco, altere `supabaseApi.js` (e, se quiser manter a demonstração igual,
 
 1. Importe o repositório na Vercel e defina **Root Directory** = `frontend`.
 2. Framework: Vite (detectado). Build: `npm run build`. Output: `dist`.
-3. Em **Environment Variables**, cadastre `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
+3. Em **Environment Variables**, escolha o modo: `VITE_MODO=demo` (apresentação, sem servidor) ou
+   `VITE_MODO=supabase` com `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`. O modo `backend` exige
+   que o site e a API estejam na mesma origem, então não funciona só com a Vercel.
 
 ## Identidade visual
 

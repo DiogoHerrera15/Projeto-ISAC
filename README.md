@@ -12,6 +12,8 @@
 - [Como o ISAC Market funciona](#como-o-isac-market-funciona)
 - [Funcionalidades previstas para o MVP](#funcionalidades-previstas-para-o-mvp)
 - [Tecnologias](#tecnologias)
+- [Como executar o projeto](#como-executar-o-projeto)
+- [API do backend](#api-do-backend)
 - [Banco de dados](#banco-de-dados)
 - [Instalação do banco no Supabase](#instalação-do-banco-no-supabase)
 - [Organização do repositório](#organização-do-repositório)
@@ -83,7 +85,7 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 | **Comissões** | Cálculo automático sobre os itens do pedido. |
 | **Administração** | Consulta de pedidos, produtos e valores de comissão; confirmação simulada. |
 
-> **Atenção ao andamento:** o banco de dados do MVP já foi preparado em SQL. As telas e a integração completa com o frontend são etapas de desenvolvimento; esta documentação não indica que todo o site já esteja concluído.
+> **Atenção ao andamento:** o projeto tem hoje um **backend próprio** (API em Node.js com PostgreSQL, coberta por testes automatizados) e um **frontend em React**. O frontend foi ligado ao backend recentemente; o fluxo completo (cadastro, carrinho, pedido, confirmação) ainda está em validação. O frontend também roda sozinho em **modo demonstração**, com dados de exemplo, o que permite apresentar as telas sem servidor.
 
 ## Tecnologias
 
@@ -91,13 +93,67 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 |---|---|
 | **React + Vite** | Interface web e funcionalidades do site. |
 | **Tailwind CSS** | Estilização responsiva para computadores e celulares. |
-| **Supabase** | Banco de dados PostgreSQL, autenticação e armazenamento de imagens. |
+| **Node.js 24 + Express 5** | API do backend (`/api/v1`): autenticação por sessão, catálogo, carrinho, pedidos, comissões e administração. |
+| **PostgreSQL 17** | Banco de dados do backend (migração em `backend/migrations`). |
+| **Supabase** | Alternativa opcional ao backend próprio (SQL em `database/`), mantida como legado. |
 | **Vercel** | Publicação do frontend na internet para apresentação e testes. |
 | **Git + GitHub** | Versionamento do projeto e colaboração entre integrantes. |
 
+## Como executar o projeto
+
+Requisitos: **Node.js 24** (backend), **Node.js 20.19 ou mais recente** (frontend) e **Docker** para o PostgreSQL local.
+
+### Backend (API)
+
+```bash
+cd backend
+cp .env.example .env
+docker compose up -d
+npm install
+npm run db:migrate
+npm run db:seed -- --demo    # contas, lojas e produtos fictícios (senha isac1234)
+npm run dev                  # API em http://localhost:3001
+```
+
+Contas de exemplo: `cliente@exemplo.com`, `lucia@exemplo.com` (vendedora) e `admin@isac.org` (administração).
+
+Testes automatizados (precisam do PostgreSQL do `compose.yaml` no ar):
+
+```bash
+npm test
+```
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev                  # site em http://localhost:5173
+```
+
+O Vite encaminha `/api` para o backend. O backend só aceita ações de gravação (login, carrinho, pedidos) vindas do endereço exato configurado em `APP_ORIGIN` no `backend/.env` (por padrão `http://localhost:5173`); abra o site por esse mesmo endereço. Se aparecer *"Origem da requisição não permitida"*, o endereço da barra do navegador é diferente do `APP_ORIGIN`. Em ambientes remotos (como o GitHub Codespaces), use no `APP_ORIGIN` o endereço público da porta 5173.
+
+### Modo demonstração (sem backend)
+
+Para apresentar as telas sem subir servidor, crie `frontend/.env.local` com `VITE_MODO=demo`. Os dados de exemplo ficam salvos só no navegador (contas e regras detalhadas em `frontend/README.md`).
+
+## API do backend
+
+Todas as rotas ficam em `/api/v1` e respondem JSON no formato `{ "data": ... }` (ou `{ "error": { "code", "message" } }`).
+
+| Área | Rotas principais |
+|---|---|
+| **Acesso** | `POST /auth/cadastro`, `POST /auth/login`, `GET /auth/sessao`, `POST /auth/logout` |
+| **Perfil** | `GET/PATCH /perfil` |
+| **Catálogo (público)** | `GET /produtos`, `GET /produtos/:id`, `GET /lojas`, `GET /configuracoes/comissao` |
+| **Carrinho** | `GET /carrinho`, `PUT/DELETE /carrinho/itens/:produtoId` |
+| **Pedidos** | `POST /pedidos` (exige `Idempotency-Key`), `GET /pedidos`, `POST /pedidos/:id/cancelamento` |
+| **Vendedor** | `GET/POST/PATCH /minha-loja`, `GET/POST/PATCH /minha-loja/produtos`, `POST /minha-loja/imagens`, `GET /minha-loja/vendas` |
+| **Administração** | `GET /admin/pedidos`, `POST /admin/pedidos/:id/confirmacao`, `GET/PATCH /admin/lojas`, `GET/PATCH /admin/produtos`, `PATCH /admin/configuracoes/comissao` |
+
 ## Banco de dados
 
-A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tabelas principais**:
+A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tabelas principais**. O backend próprio usa o mesmo modelo em `backend/migrations/001_modelo.sql` e acrescenta as tabelas `usuarios`, `sessoes` e `imagens`, porque a autenticação e o armazenamento de fotos deixam de depender do Supabase:
 
 | Tabela | Finalidade |
 |---|---|
@@ -127,7 +183,9 @@ O sistema também utiliza os recursos nativos do Supabase: **Authentication** pa
 
 > O arquivo de imagem deve estar na pasta `database/` para que o diagrama seja exibido corretamente no GitHub.
 
-## Instalação do banco no Supabase
+## Instalação do banco no Supabase (opcional)
+
+Esta etapa só é necessária para usar o Supabase no lugar do backend próprio (`VITE_MODO=supabase` no frontend). Para o backend Node, siga [Como executar o projeto](#como-executar-o-projeto).
 
 Para criar um banco de testes a partir do código disponibilizado:
 
@@ -157,19 +215,22 @@ As credenciais **públicas** de conexão serão configuradas no ambiente do fron
 
 ## Organização do repositório
 
-Estrutura atual e sugerida para a evolução do projeto:
-
 ```text
 Projeto-ISAC/
-├── database/
-│   ├── ISAC_Market_banco_supabase.sql
-│   ├── ISAC_Market_modelo_ER.png
-│   └── GUIA_ISAC_Market.md          # documentação complementar (recomendado)
-├── README.md                         # apresentação e instruções do projeto
-└── ...                               # arquivos do frontend, conforme forem criados
+├── backend/                 # API Node.js + PostgreSQL
+│   ├── migrations/          # modelo do banco (SQL)
+│   ├── scripts/             # migrar, popular, promover admin, limpezas
+│   ├── src/                 # módulos: auth, catálogo, carrinho, pedidos, lojas, admin...
+│   ├── tests/               # testes unitários e de integração
+│   └── compose.yaml         # PostgreSQL local (Docker)
+├── frontend/                # site em React + Vite + Tailwind
+│   └── src/services/        # backendApi, supabaseApi e demoApi
+├── database/                # SQL e diagrama do modelo (versão Supabase)
+├── .github/workflows/       # verificação automática (CI)
+└── README.md
 ```
 
-A documentação do banco fica separada do código da interface para facilitar a colaboração e a manutenção.
+Cada módulo do backend separa **rotas, controlador, serviço e repositório**, e um teste de arquitetura garante que a camada HTTP não executa SQL.
 
 ## Escopo e próximas etapas
 
@@ -186,6 +247,17 @@ A documentação do banco fica separada do código da interface para facilitar a
 Essas funcionalidades futuras **não fazem parte da entrega inicial definida na proposta**.
 
 ## Segurança e colaboração
+
+Controles já implementados no backend:
+
+- Senhas guardadas com **scrypt** e salt individual (nunca em texto puro).
+- Sessão em cookie **HttpOnly** e **SameSite**, com marca **Secure** em produção; o servidor guarda apenas o *hash* do token.
+- Proteção contra requisições de outros sites (verificação de origem e cabeçalho próprio).
+- Limite de tentativas nas rotas de login e cadastro.
+- Validação de todas as entradas e consultas SQL parametrizadas.
+- Checkout **idempotente** e com bloqueio de estoque, para evitar pedidos duplicados e vendas acima do estoque.
+- Upload de fotos limitado a JPG, PNG e WebP (até 5 MB), com conferência do conteúdo real do arquivo.
+
 
 - O código SQL pode ser compartilhado pelo GitHub; ele **não contém, por si só, os dados reais de uma instância Supabase**.
 - O banco efetivamente utilizado pela aplicação fica hospedado no Supabase.
