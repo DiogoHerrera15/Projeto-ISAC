@@ -23,8 +23,8 @@ export default function Cadastrar() {
   async function aoEnviar(e) {
     e.preventDefault()
     setErro('')
-    if (dados.senha.length < 6) {
-      setErro('A senha precisa ter pelo menos 6 caracteres.')
+    if (dados.senha.length < 8) {
+      setErro('A senha precisa ter pelo menos 8 caracteres.')
       return
     }
     setEnviando(true)
