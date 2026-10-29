@@ -74,7 +74,7 @@ export default function Cadastrar() {
         />
         <Campo
           rotulo="Senha"
-          dica="Pelo menos 6 caracteres."
+          dica="Pelo menos 8 caracteres."
           type="password"
           autoComplete="new-password"
           required
