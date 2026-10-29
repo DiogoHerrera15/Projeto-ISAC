@@ -8,13 +8,13 @@
   "scripts": {
     "dev": "node --watch --env-file=.env src/server.js",
     "start": "node src/server.js",
-    "db:migrate": "node scripts/migrate.js",
-    "db:seed": "node scripts/seed.js",
-    "admin:promote": "node scripts/promote-admin.js",
-    "sessions:clean": "node scripts/clean-sessions.js",
-    "images:clean": "node scripts/clean-images.js",
-    "test:unit": "node --test tests/unit/*.test.js",
-    "test:integration": "node --test --test-concurrency=1 tests/integration/*.test.js",
+    "db:migrate": "node --env-file-if-exists=.env scripts/migrate.js",
+    "db:seed": "node --env-file-if-exists=.env scripts/seed.js",
+    "admin:promote": "node --env-file-if-exists=.env scripts/promote-admin.js",
+    "sessions:clean": "node --env-file-if-exists=.env scripts/clean-sessions.js",
+    "images:clean": "node --env-file-if-exists=.env scripts/clean-images.js",
+    "test:unit": "node --env-file-if-exists=.env --test tests/unit/*.test.js",
+    "test:integration": "node --env-file-if-exists=.env --test --test-concurrency=1 tests/integration/*.test.js",
     "test": "npm run test:unit && npm run test:integration"
   },
   "dependencies": {
