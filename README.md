@@ -131,7 +131,9 @@ npm install
 npm run dev                  # site em http://localhost:5173
 ```
 
-O Vite encaminha `/api` para o backend. O backend só aceita ações de gravação (login, carrinho, pedidos) vindas do endereço exato configurado em `APP_ORIGIN` no `backend/.env` (por padrão `http://localhost:5173`); abra o site por esse mesmo endereço. Se aparecer *"Origem da requisição não permitida"*, o endereço da barra do navegador é diferente do `APP_ORIGIN`. Em ambientes remotos (como o GitHub Codespaces), use no `APP_ORIGIN` o endereço público da porta 5173.
+O Vite encaminha `/api` para o backend. O backend só aceita ações de gravação (login, carrinho, pedidos) vindas do endereço exato configurado em `APP_ORIGIN` no `backend/.env` (por padrão `http://localhost:5173`); abra o site por esse mesmo endereço. Se aparecer *"Origem da requisição não permitida"*, o endereço da barra do navegador é diferente do `APP_ORIGIN`. Em ambientes remotos (como o GitHub Codespaces), use no `APP_ORIGIN` o endereço público da porta 5173; é possível listar vários endereços separados por vírgula, e o backend registra no terminal a linha `Origem recusada: ...` quando algo não bate.
+
+> Para apresentar o projeto, veja o [roteiro de apresentação](docs/ROTEIRO_APRESENTACAO.md).
 
 ### Modo demonstração (sem backend)
 

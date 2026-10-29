@@ -2,6 +2,7 @@ import express from 'express'
 import { join } from 'node:path'
 import { errorHandler, HttpError } from './http/errors.js'
 import { requireSameOrigin } from './http/origin.js'
+import { securityHeaders } from './http/headers.js'
 import { registerAuthRoutes } from './modules/auth/routes.js'
 import { registerProfileRoutes } from './modules/perfis/routes.js'
 import { registerCatalogRoutes } from './modules/catalogo/routes.js'
@@ -16,11 +17,13 @@ import { registerImageRoutes } from './modules/imagens/routes.js'
 export function createApp({ pool, storage, config } = {}) {
   const app = express()
   app.disable('x-powered-by')
+  if (config.trustProxy) app.set('trust proxy', config.trustProxy)
+  app.use(securityHeaders)
   app.locals.pool = pool
   app.locals.storage = storage
   app.locals.config = config
   app.use(express.json({ limit: '64kb' }))
-  app.use('/api/v1', requireSameOrigin(config.appOrigin))
+  app.use('/api/v1', requireSameOrigin(config.appOrigins ?? config.appOrigin))
   app.get('/api/v1/health', (_req, res) => res.json({ data: { status: 'ok' } }))
   registerAuthRoutes(app, pool, config)
   registerProfileRoutes(app, pool)

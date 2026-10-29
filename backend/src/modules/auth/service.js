@@ -1,5 +1,6 @@
 import { withTransaction } from '../../db/transaction.js'
 import { HttpError } from '../../http/errors.js'
+import { randomBytes } from 'node:crypto'
 import { hashPassword, verifyPassword } from './passwords.js'
 import { createSession, tokenHash } from './tokens.js'
 import * as repository from './repository.js'
@@ -19,8 +20,17 @@ export async function register(pool, { nome, email, senha, telefone }, ttlSecond
   }
 }
 
+// Conta inexistente também gasta o tempo de uma verificação de senha; senão a
+// resposta mais rápida revelaria quais e-mails têm cadastro.
+let hashFalso
+async function verificarSenhaFalsa(senha) {
+  hashFalso ??= hashPassword(randomBytes(16).toString('hex'))
+  await verifyPassword(senha, await hashFalso)
+}
+
 export async function login(pool, { email, senha }, ttlSeconds) {
   const user = await repository.findUserByEmail(pool, email)
+  if (!user) await verificarSenhaFalsa(senha)
   if (!user || !(await verifyPassword(senha, user.senha_hash))) {
     throw new HttpError(401, 'CREDENCIAIS_INVALIDAS', 'E-mail ou senha incorretos.')
   }
