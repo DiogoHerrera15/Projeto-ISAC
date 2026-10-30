@@ -162,9 +162,16 @@ export const backendApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
-    const produtos = await listarTudo('/produtos', { busca: busca.trim(), lojaId })
-    return produtos.map(normalizarProduto)
+  // Uma página do catálogo: { itens, total }. Usado pelo "Carregar mais".
+  async listarProdutosPagina({ busca = '', lojaId = '', categoria = '', ordem = 'recentes', pagina = 1, limite = 12 } = {}) {
+    const { data, meta } = await requisicao('GET', '/produtos', {
+      consulta: { busca: busca.trim(), lojaId, categoria, ordem, pagina, limite },
+    })
+    return { itens: data.map(normalizarProduto), total: meta.total }
+  },
+
+  async listarCategorias() {
+    return (await requisicao('GET', '/categorias')).data
   },
 
   async obterProduto(id) {
@@ -178,6 +185,15 @@ export const backendApi = {
 
   async listarLojasAtivas() {
     return listarTudo('/lojas')
+  },
+
+  async obterLoja(id) {
+    try {
+      return (await requisicao('GET', `/lojas/${id}`)).data
+    } catch (e) {
+      if (e.status === 404) return null
+      throw e
+    }
   },
 
   async obterTaxa() {
@@ -224,6 +240,17 @@ export const backendApi = {
     return pedidos.map(normalizarPedido)
   },
 
+  // visao: 'cliente', 'vendedor' (só os itens da própria loja) ou 'admin'.
+  async obterPedido(id) {
+    try {
+      const { data } = await requisicao('GET', `/pedidos/${id}`)
+      return { ...normalizarPedido(data), visao: data.visao }
+    } catch (e) {
+      if (e.status === 404) return null
+      throw e
+    }
+  },
+
   async cancelarPedido(pedidoId) {
     await requisicao('POST', `/pedidos/${pedidoId}/cancelamento`, { corpo: {} })
   },
@@ -253,10 +280,11 @@ export const backendApi = {
   },
 
   async salvarProduto(produto) {
-    const { id, nome, descricao, preco, foto_url, estoque, ativo, versao } = produto
+    const { id, nome, descricao, preco, foto_url, estoque, ativo, versao, categoria_id } = produto
     const campos = {
       nome,
       descricao: descricao || null,
+      categoria_id: categoria_id || null,
       preco: Number(preco).toFixed(2),
       estoque,
       ativo,
@@ -302,6 +330,18 @@ export const backendApi = {
   async todosPedidos() {
     const pedidos = await listarTudo('/admin/pedidos')
     return pedidos.map(normalizarPedido)
+  },
+
+  // de/ate no formato AAAA-MM-DD (opcionais); agrupar: dia, semana ou mes.
+  async relatorioVendas({ de = '', ate = '', agrupar = 'dia' } = {}) {
+    const { data } = await requisicao('GET', '/admin/relatorios/vendas', { consulta: { de, ate, agrupar } })
+    const valores = (l) => ({
+      ...l,
+      valor_total: num(l.valor_total),
+      comissao_isac: num(l.comissao_isac),
+      valor_vendedores: num(l.valor_vendedores),
+    })
+    return { ...data, totais: valores(data.totais), por_periodo: data.por_periodo.map(valores), por_loja: data.por_loja.map(valores) }
   },
 
   async confirmarPagamento(pedidoId) {

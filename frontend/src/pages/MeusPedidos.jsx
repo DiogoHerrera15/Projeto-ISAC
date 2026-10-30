@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
 import { codigoPedido, formatarDataHora, formatarMoeda, mensagemDeErro } from '../lib/format'
@@ -54,7 +55,9 @@ function CartaoPedido({ pedido, aoCancelar }) {
   return (
     <li className="bg-white border-2 border-linha rounded-lg p-5">
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <span className="font-display text-2xl font-extrabold">{codigoPedido(pedido.id)}</span>
+        <Link to={`/pedidos/${pedido.id}`} className="font-display text-2xl font-extrabold hover:text-mar hover:underline">
+          {codigoPedido(pedido.id)}
+        </Link>
         <StatusPedido status={pedido.status} />
         <span className="text-sm text-tinta-suave">{formatarDataHora(pedido.criado_em)}</span>
         <span className="ml-auto font-display text-3xl font-black tabular-nums">{formatarMoeda(pedido.valor_total)}</span>
@@ -63,7 +66,10 @@ function CartaoPedido({ pedido, aoCancelar }) {
         <ItensDoPedido itens={pedido.itens} />
       </div>
       <p className="mt-3 text-sm text-tinta-suave">
-        {formatarMoeda(pedido.comissao_isac)} deste pedido {pedido.status === 'confirmado' ? 'foram' : 'serão'} para o ISAC.
+        {formatarMoeda(pedido.comissao_isac)} deste pedido {pedido.status === 'confirmado' ? 'foram' : 'serão'} para o ISAC.{' '}
+        <Link to={`/pedidos/${pedido.id}`} className="font-bold text-mar underline underline-offset-2">
+          Ver detalhes
+        </Link>
       </p>
       {pedido.status === 'pendente' && (
         <div className="mt-4 flex flex-wrap items-center gap-3">

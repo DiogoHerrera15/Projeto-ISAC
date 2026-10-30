@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../services/api'
 import { codigoPedido, formatarDataHora, formatarMoeda, mensagemDeErro } from '../lib/format'
 import StatusPedido from '../components/StatusPedido'
+import RelatorioVendas from '../components/RelatorioVendas'
 import { ItensDoPedido } from './MeusPedidos'
 import { Abas, Aviso, Botao, Campo, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
 
@@ -10,90 +11,25 @@ import { Abas, Aviso, Botao, Campo, Carregando, Selecao, TituloPagina, Vazio } f
 // Resumo
 // ---------------------------------------------------------------------------
 function Resumo({ pedidos, irParaPendentes }) {
-  const dados = useMemo(() => {
-    const confirmados = pedidos.filter((p) => p.status === 'confirmado')
-    const pendentes = pedidos.filter((p) => p.status === 'pendente')
-    const soma = (lista, campo) => lista.reduce((s, p) => s + p[campo], 0)
-    const porLoja = {}
-    for (const p of confirmados)
-      for (const i of p.itens) {
-        const nome = i.loja?.nome || 'Loja'
-        porLoja[nome] ||= { vendido: 0, comissao: 0 }
-        porLoja[nome].vendido += i.subtotal
-        porLoja[nome].comissao += i.valor_comissao
-      }
-    const lojas = Object.entries(porLoja).sort((a, b) => b[1].comissao - a[1].comissao)
-    return {
-      vendido: soma(confirmados, 'valor_total'),
-      comissao: soma(confirmados, 'comissao_isac'),
-      vendedores: soma(confirmados, 'valor_vendedores'),
-      qtdConfirmados: confirmados.length,
-      pendentes,
-      comissaoPendente: soma(pendentes, 'comissao_isac'),
-      lojas,
-      maxComissao: Math.max(...lojas.map(([, v]) => v.comissao), 0.01),
-    }
-  }, [pedidos])
+  const pendentes = pedidos.filter((p) => p.status === 'pendente')
+  const comissaoPendente = pendentes.reduce((s, p) => s + p.comissao_isac, 0)
 
   return (
-    <div className="space-y-12">
-      {dados.pendentes.length > 0 && (
+    <div className="space-y-10">
+      {pendentes.length > 0 && (
         <Aviso tipo="atencao" className="flex flex-wrap items-center justify-between gap-3">
           <span>
             <strong>
-              {dados.pendentes.length} {dados.pendentes.length === 1 ? 'pedido aguarda' : 'pedidos aguardam'} confirmação de
-              pagamento
+              {pendentes.length} {pendentes.length === 1 ? 'pedido aguarda' : 'pedidos aguardam'} confirmação de pagamento
             </strong>{' '}
-            ({formatarMoeda(dados.comissaoPendente)} de comissão a confirmar).
+            ({formatarMoeda(comissaoPendente)} de comissão a confirmar).
           </span>
           <Botao tamanho="p" onClick={irParaPendentes}>
             Ver pedidos pendentes
           </Botao>
         </Aviso>
       )}
-
-      <div>
-        <h2 className="text-sm font-bold text-tinta-suave mb-3">Pedidos confirmados ({dados.qtdConfirmados})</h2>
-        <dl className="grid gap-8 sm:grid-cols-3">
-          <div>
-            <dt className="text-tinta-suave">Comissão do ISAC</dt>
-            <dd className="mt-1">
-              <span className="etiqueta text-5xl">{formatarMoeda(dados.comissao)}</span>
-            </dd>
-          </div>
-          <div className="border-l-4 border-mar pl-4">
-            <dt className="text-tinta-suave">Total vendido</dt>
-            <dd className="font-display text-5xl font-black tabular-nums">{formatarMoeda(dados.vendido)}</dd>
-          </div>
-          <div className="border-l-4 border-linha pl-4">
-            <dt className="text-tinta-suave">Valor das lojas</dt>
-            <dd className="font-display text-5xl font-black tabular-nums">{formatarMoeda(dados.vendedores)}</dd>
-          </div>
-        </dl>
-      </div>
-
-      <div>
-        <h2 className="text-4xl font-extrabold mb-1">Comissão por loja</h2>
-        <p className="text-tinta-suave mb-6">Somente pedidos com pagamento confirmado.</p>
-        {dados.lojas.length === 0 ? (
-          <p className="text-tinta-suave">Nenhuma venda confirmada ainda.</p>
-        ) : (
-          <ul className="space-y-4 max-w-3xl">
-            {dados.lojas.map(([nome, v]) => (
-              <li key={nome} className="grid grid-cols-[minmax(8rem,12rem)_1fr] items-center gap-4">
-                <span className="font-bold truncate">{nome}</span>
-                <div className="flex items-center gap-3">
-                  <div className="h-7 bg-mar rounded-sm" style={{ width: `${(v.comissao / dados.maxComissao) * 70}%`, minWidth: 4 }} />
-                  <span className="tabular-nums whitespace-nowrap">
-                    <strong>{formatarMoeda(v.comissao)}</strong>
-                    <span className="text-tinta-suave text-sm"> de {formatarMoeda(v.vendido)}</span>
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <RelatorioVendas />
     </div>
   )
 }
@@ -125,7 +61,9 @@ function LinhaPedido({ pedido, aoAlterar }) {
     <li className="bg-white border-2 border-linha rounded-lg">
       <div className="p-4 sm:p-5 grid gap-3 sm:grid-cols-[1fr_auto] items-center">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-display text-2xl font-extrabold">{codigoPedido(pedido.id)}</span>
+          <Link to={`/pedidos/${pedido.id}`} className="font-display text-2xl font-extrabold hover:text-mar hover:underline">
+            {codigoPedido(pedido.id)}
+          </Link>
           <StatusPedido status={pedido.status} />
           <span className="text-sm text-tinta-suave">{formatarDataHora(pedido.criado_em)}</span>
           <span className="w-full text-sm">
@@ -265,7 +203,7 @@ function Lojas() {
           {lojas.map((l) => (
             <tr key={l.id} className="border-b border-linha">
               <td className="py-3">
-                <Link to={`/produtos?loja=${l.id}`} className="font-bold hover:underline">
+                <Link to={`/lojas/${l.id}`} className="font-bold hover:underline">
                   {l.nome}
                 </Link>
                 <span className="block text-sm text-tinta-suave">desde {formatarDataHora(l.criado_em).split(' ')[0]}</span>

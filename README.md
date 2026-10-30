@@ -79,11 +79,12 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 |---|---|
 | **Acesso** | Cadastro e autenticação de usuários. |
 | **Vendedores** | Cadastro de loja e gerenciamento de produtos. |
-| **Catálogo** | Listagem de produtos com informações e imagens. |
+| **Catálogo** | Listagem de produtos com imagens, busca enquanto digita, filtro por loja e por categoria, ordenação por preço e "Carregar mais". |
+| **Lojas** | Página pública de cada loja (`/lojas/:id`) com descrição e produtos. |
 | **Carrinho** | Inclusão e ajuste de quantidades de produtos. |
-| **Pedidos** | Registro de pedidos e acompanhamento do status. |
+| **Pedidos** | Registro de pedidos, acompanhamento do status e página de detalhe (`/pedidos/:id`) com a divisão entre loja e ISAC, para cliente, vendedora e administração. |
 | **Comissões** | Cálculo automático sobre os itens do pedido. |
-| **Administração** | Consulta de pedidos, produtos e valores de comissão; confirmação simulada. |
+| **Administração** | Consulta de pedidos, produtos e valores de comissão; confirmação simulada; relatório de vendas confirmadas por período e por loja, com gráfico e exportação CSV. |
 
 > **Atenção ao andamento:** o projeto tem hoje um **backend próprio** (API em Node.js com PostgreSQL, coberta por testes automatizados) e um **frontend em React**. O frontend foi ligado ao backend recentemente; o fluxo completo (cadastro, carrinho, pedido, confirmação) ainda está em validação. O frontend também roda sozinho em **modo demonstração**, com dados de exemplo, o que permite apresentar as telas sem servidor.
 
@@ -147,11 +148,11 @@ Todas as rotas ficam em `/api/v1` e respondem JSON no formato `{ "data": ... }` 
 |---|---|
 | **Acesso** | `POST /auth/cadastro`, `POST /auth/login`, `GET /auth/sessao`, `POST /auth/logout` |
 | **Perfil** | `GET/PATCH /perfil` |
-| **Catálogo (público)** | `GET /produtos`, `GET /produtos/:id`, `GET /lojas`, `GET /configuracoes/comissao` |
+| **Catálogo (público)** | `GET /produtos` (filtros `busca`, `lojaId`, `categoria`, `ordem`=`recentes`/`menor`/`maior`/`nome`, paginação `pagina`/`limite`), `GET /produtos/:id`, `GET /categorias`, `GET /lojas`, `GET /lojas/:id`, `GET /configuracoes/comissao` |
 | **Carrinho** | `GET /carrinho`, `PUT/DELETE /carrinho/itens/:produtoId` |
-| **Pedidos** | `POST /pedidos` (exige `Idempotency-Key`), `GET /pedidos`, `POST /pedidos/:id/cancelamento` |
+| **Pedidos** | `POST /pedidos` (exige `Idempotency-Key`), `GET /pedidos`, `GET /pedidos/:id` (cliente e administração veem tudo; a vendedora vê só os itens da sua loja), `POST /pedidos/:id/cancelamento` |
 | **Vendedor** | `GET/POST/PATCH /minha-loja`, `GET/POST/PATCH /minha-loja/produtos`, `POST /minha-loja/imagens`, `GET /minha-loja/vendas` |
-| **Administração** | `GET /admin/pedidos`, `POST /admin/pedidos/:id/confirmacao`, `GET/PATCH /admin/lojas`, `GET/PATCH /admin/produtos`, `PATCH /admin/configuracoes/comissao` |
+| **Administração** | `GET /admin/pedidos`, `POST /admin/pedidos/:id/confirmacao`, `GET/PATCH /admin/lojas`, `GET/PATCH /admin/produtos`, `PATCH /admin/configuracoes/comissao`, `GET /admin/relatorios/vendas?de=AAAA-MM-DD&ate=AAAA-MM-DD&agrupar=dia\|semana\|mes` (só pedidos confirmados, pela data da confirmação no fuso de Recife) |
 
 ## Banco de dados
 
@@ -168,6 +169,8 @@ A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tab
 | `configuracoes` | Percentual atual de comissão do ISAC. |
 
 O sistema também utiliza os recursos nativos do Supabase: **Authentication** para contas de usuários e **Storage** para fotos dos produtos.
+
+A migration `backend/migrations/002_categorias.sql` acrescenta ao backend a tabela `categorias` (lista fixa, com ids legíveis como `doces` e `artesanato`) e a coluna opcional `produtos.categoria_id`. Para aplicá-la num banco já existente, rode `npm run db:migrate` de novo. O script do Supabase (`database/`) **não** tem categorias: no modo Supabase o filtro por categoria não aparece.
 
 ### Regras importantes da modelagem
 

@@ -70,14 +70,16 @@ do site (local e da Vercel) para o link de confirmação funcionar.
 | Rota | Quem usa | O que faz |
 |---|---|---|
 | `/` | Todos | Apresentação, simulador da divisão da venda, produtos recentes, lojas, como funciona |
-| `/produtos` | Todos | Catálogo com busca, filtro por loja e ordenação |
-| `/produtos/:id` | Todos | Detalhe do produto e escolha de quantidade |
+| `/produtos` | Todos | Catálogo com busca enquanto digita, filtro por loja e categoria, ordenação (inclusive por preço) e "Carregar mais" (12 por vez) |
+| `/produtos/:id` | Todos | Detalhe do produto, categoria e escolha de quantidade |
+| `/lojas/:id` | Todos | Página pública da loja: descrição e produtos (loja fechada só para a dona e a administração) |
 | `/carrinho` | Todos | Carrinho agrupado por loja; finaliza com `finalizar_pedido()` |
 | `/entrar`, `/cadastrar` | Visitantes | Login e criação de conta (Supabase Auth) |
 | `/pedidos` | Cliente | Pedidos com status; cancela pendentes com `cancelar_pedido()` |
+| `/pedidos/:id` | Cliente, vendedora, administrador | Detalhe do pedido: itens, status, datas e divisão entre loja e ISAC (a vendedora vê só os itens dela) |
 | `/conta` | Logado | Nome e telefone (as lojas usam o telefone para combinar entrega) |
-| `/minha-loja` | Vendedor | Abre a loja, cadastra produtos com foto (Storage), vê vendas via `pedidos_do_vendedor()` |
-| `/admin` | Administrador | Resumo de comissões, pedidos com confirmação simulada, lojas, produtos e taxa |
+| `/minha-loja` | Vendedor | Abre a loja, cadastra produtos com foto e categoria, vê vendas via `pedidos_do_vendedor()` |
+| `/admin` | Administrador | Relatório de vendas confirmadas por período e por loja (gráfico, tabela e CSV), pedidos com confirmação simulada, lojas, produtos e taxa |
 
 Quem não entrou na conta pode montar o carrinho; ao entrar, os itens vão para a
 tabela `carrinho_itens`.

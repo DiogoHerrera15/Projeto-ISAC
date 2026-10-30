@@ -62,7 +62,10 @@ export default function Inicio() {
 
   useEffect(() => {
     api.obterTaxa().then(setTaxa).catch(() => {})
-    api.listarProdutos().then((p) => setProdutos(p.slice(0, 8))).catch(() => setProdutos([]))
+    api
+      .listarProdutosPagina({ limite: 8 })
+      .then((r) => setProdutos(r.itens))
+      .catch(() => setProdutos([]))
     api.listarLojasAtivas().then(setLojas).catch(() => {})
   }, [])
 
@@ -119,7 +122,7 @@ export default function Inicio() {
           <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {lojas.map((l) => (
               <li key={l.id} className="border-t-4 border-mar pt-4">
-                <Link to={`/produtos?loja=${l.id}`} className="font-display text-3xl font-extrabold hover:text-mar">
+                <Link to={`/lojas/${l.id}`} className="font-display text-3xl font-extrabold hover:text-mar">
                   {l.nome}
                 </Link>
                 {l.descricao && <p className="mt-2 text-tinta-suave">{l.descricao}</p>}

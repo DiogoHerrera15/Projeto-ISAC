@@ -1,80 +1,84 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api'
-import { mensagemDeErro } from '../lib/format'
+import { ORDENS_PRODUTOS as ORDENS } from '../lib/format'
+import { useProdutosPaginados } from '../lib/useProdutosPaginados'
 import ProdutoCard from '../components/ProdutoCard'
-import { Aviso, Botao, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
+import { Aviso, Botao, BotaoLink, Carregando, MaisProdutos, Selecao, TituloPagina, Vazio } from '../components/ui'
 
-const ORDENS = {
-  recentes: ['Mais recentes', () => 0],
-  menor: ['Menor preço', (a, b) => a.preco - b.preco],
-  maior: ['Maior preço', (a, b) => b.preco - a.preco],
-  nome: ['Nome (A–Z)', (a, b) => a.nome.localeCompare(b.nome)],
-}
+const ESPERA_DIGITACAO = 400
 
 export default function Catalogo() {
   const [params, setParams] = useSearchParams()
   const busca = params.get('busca') || ''
   const lojaId = params.get('loja') || ''
-  const ordem = params.get('ordem') || 'recentes'
+  const categoria = params.get('categoria') || ''
+  const ordem = ORDENS[params.get('ordem')] ? params.get('ordem') : 'recentes'
 
   const [texto, setTexto] = useState(busca)
-  const [produtos, setProdutos] = useState(null)
   const [lojas, setLojas] = useState([])
-  const [erro, setErro] = useState('')
+  const [categorias, setCategorias] = useState([])
+  const { produtos, total, temMais, carregarMais, carregandoMais, erro } = useProdutosPaginados({
+    busca,
+    lojaId,
+    categoria,
+    ordem,
+  })
 
   useEffect(() => {
     api.listarLojasAtivas().then(setLojas).catch(() => {})
+    api.listarCategorias().then(setCategorias).catch(() => {})
   }, [])
 
+  // Busca enquanto digita: espera a pessoa parar por um instante antes de consultar.
   useEffect(() => {
-    let ativo = true
-    setProdutos(null)
-    setErro('')
-    api
-      .listarProdutos({ busca, lojaId })
-      .then((p) => ativo && setProdutos(p))
-      .catch((e) => {
-        if (!ativo) return
-        setErro(mensagemDeErro(e))
-        setProdutos([])
-      })
-    return () => {
-      ativo = false
-    }
-  }, [busca, lojaId])
+    if (texto.trim() === busca) return
+    const espera = setTimeout(() => atualizar('busca', texto.trim()), ESPERA_DIGITACAO)
+    return () => clearTimeout(espera)
+  }, [texto, busca])
 
-  const ordenados = useMemo(() => {
-    if (!produtos) return null
-    const fn = ORDENS[ordem]?.[1] || ORDENS.recentes[1]
-    return [...produtos].sort(fn)
-  }, [produtos, ordem])
+  // A busca pode mudar fora do campo (voltar do navegador, "Limpar filtros", link do menu).
+  useEffect(() => {
+    setTexto((atual) => (atual.trim() === busca ? atual : busca))
+  }, [busca])
 
+  // Parte da URL do navegador, e não de `params`: a navegação do React Router
+  // roda em transição e `params` pode ainda não ter a mudança anterior.
   function atualizar(chave, valor) {
-    const novo = new URLSearchParams(params)
+    const novo = new URLSearchParams(window.location.search)
     if (valor) novo.set(chave, valor)
     else novo.delete(chave)
     setParams(novo, { replace: true })
   }
 
   const lojaAtual = lojas.find((l) => l.id === lojaId)
-  const filtrando = busca || lojaId
+  const categoriaAtual = categorias.find((c) => c.id === categoria)
+  const filtrando = busca || lojaId || categoria
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <TituloPagina titulo={lojaAtual ? lojaAtual.nome : 'Produtos'}>
+      <TituloPagina
+        titulo={lojaAtual ? lojaAtual.nome : 'Produtos'}
+        acoes={
+          lojaAtual && (
+            <BotaoLink to={`/lojas/${lojaAtual.id}`} variante="secundario">
+              Ver página da loja
+            </BotaoLink>
+          )
+        }
+      >
         {lojaAtual?.descricao || 'Tudo o que as lojas da comunidade estão vendendo agora.'}
       </TituloPagina>
 
       <form
         role="search"
-        className="grid gap-3 grid-cols-2 sm:grid-cols-[1fr_auto_auto] mb-10"
+        className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[1fr_auto_auto_auto] mb-10"
         onSubmit={(e) => {
           e.preventDefault()
           atualizar('busca', texto.trim())
         }}
       >
-        <div className="col-span-2 sm:col-span-1 flex gap-2">
+        <div className="col-span-2 sm:col-span-3 lg:col-span-1 flex gap-2">
           <label htmlFor="busca" className="sr-only">
             Buscar produto
           </label>
@@ -101,12 +105,27 @@ export default function Catalogo() {
             ))}
           </Selecao>
         </div>
-        <div>
+        {categorias.length > 0 && (
+          <div>
+            <label htmlFor="categoria" className="sr-only">
+              Filtrar por categoria
+            </label>
+            <Selecao id="categoria" value={categoria} onChange={(e) => atualizar('categoria', e.target.value)}>
+              <option value="">Todas as categorias</option>
+              {categorias.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.nome}
+                </option>
+              ))}
+            </Selecao>
+          </div>
+        )}
+        <div className={categorias.length > 0 ? 'col-span-2 sm:col-span-1' : ''}>
           <label htmlFor="ordem" className="sr-only">
             Ordenar
           </label>
           <Selecao id="ordem" value={ordem} onChange={(e) => atualizar('ordem', e.target.value === 'recentes' ? '' : e.target.value)}>
-            {Object.entries(ORDENS).map(([id, [rotulo]]) => (
+            {Object.entries(ORDENS).map(([id, rotulo]) => (
               <option key={id} value={id}>
                 {rotulo}
               </option>
@@ -117,9 +136,9 @@ export default function Catalogo() {
 
       {erro && <Aviso tipo="erro" className="mb-6">{erro}</Aviso>}
 
-      {ordenados === null ? (
+      {produtos === null ? (
         <Carregando texto="Buscando produtos…" />
-      ) : ordenados.length === 0 ? (
+      ) : produtos.length === 0 ? (
         <Vazio
           titulo={filtrando ? 'Nada encontrado' : 'Nenhum produto ainda'}
           acao={
@@ -137,20 +156,22 @@ export default function Catalogo() {
           }
         >
           {filtrando
-            ? 'Tente outra palavra ou escolha “Todas as lojas”.'
+            ? 'Tente outra palavra, outra categoria ou escolha “Todas as lojas”.'
             : 'Quando as lojas publicarem seus produtos, eles aparecem aqui.'}
         </Vazio>
       ) : (
         <>
           <p className="text-tinta-suave mb-6" aria-live="polite">
-            {ordenados.length} {ordenados.length === 1 ? 'produto' : 'produtos'}
+            {total} {total === 1 ? 'produto' : 'produtos'}
             {busca && <> para “{busca}”</>}
+            {categoriaAtual && <> em {categoriaAtual.nome}</>}
           </p>
           <div className="grid gap-x-4 sm:gap-x-6 gap-y-10 grid-cols-2 lg:grid-cols-4">
-            {ordenados.map((p) => (
+            {produtos.map((p) => (
               <ProdutoCard key={p.id} produto={p} />
             ))}
           </div>
+          <MaisProdutos mostrando={produtos.length} total={total} temMais={temMais} carregarMais={carregarMais} carregando={carregandoMais} />
         </>
       )}
     </div>

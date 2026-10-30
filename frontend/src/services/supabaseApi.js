@@ -2,6 +2,7 @@
 // (database/ISAC_Market_banco_supabase.sql). As regras de permissão ficam no
 // banco (RLS); aqui só fazemos as consultas e chamamos as funções públicas.
 import { supabase } from '../lib/supabase'
+import { montarRelatorio } from './relatorio'
 
 const BUCKET = 'isac-produtos'
 
@@ -91,18 +92,6 @@ export const supabaseApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
-    let q = supabase
-      .from('produtos')
-      .select(`${CAMPOS_PRODUTO}, lojas!inner(id, nome, ativa)`)
-      .eq('ativo', true)
-      .eq('lojas.ativa', true)
-      .order('criado_em', { ascending: false })
-    if (busca.trim()) q = q.ilike('nome', `%${busca.trim()}%`)
-    if (lojaId) q = q.eq('loja_id', lojaId)
-    return checar(await q).map(normalizarProduto)
-  },
-
   async obterProduto(id) {
     const p = checar(
       await supabase
@@ -114,10 +103,44 @@ export const supabaseApi = {
     return normalizarProduto(p)
   },
 
+  // O banco Supabase não tem categorias: o filtro por categoria é ignorado neste modo.
+  async listarProdutosPagina({ busca = '', lojaId = '', ordem = 'recentes', pagina = 1, limite = 12 } = {}) {
+    const [coluna, ascending] = { menor: ['preco', true], maior: ['preco', false], nome: ['nome', true] }[ordem] || [
+      'criado_em',
+      false,
+    ]
+    let q = supabase
+      .from('produtos')
+      .select(`${CAMPOS_PRODUTO}, lojas!inner(id, nome, ativa)`, { count: 'exact' })
+      .eq('ativo', true)
+      .eq('lojas.ativa', true)
+      .order(coluna, { ascending })
+      .order('id', { ascending })
+      .range((pagina - 1) * limite, pagina * limite - 1)
+    if (busca.trim()) q = q.ilike('nome', `%${busca.trim()}%`)
+    if (lojaId) q = q.eq('loja_id', lojaId)
+    const { data, count, error } = await q
+    if (error) throw error
+    return { itens: data.map(normalizarProduto), total: count ?? data.length }
+  },
+
+  async listarCategorias() {
+    return []
+  },
+
   async listarLojasAtivas() {
     return checar(
       await supabase.from('lojas').select('id, nome, descricao').eq('ativa', true).order('nome'),
     )
+  },
+
+  async obterLoja(id) {
+    const loja = checar(
+      await supabase.from('lojas').select('id, nome, descricao, ativa, criado_em, produtos(id, ativo)').eq('id', id).maybeSingle(),
+    )
+    if (!loja) return null
+    const { produtos, ...resto } = loja
+    return { ...resto, total_produtos: (produtos ?? []).filter((p) => p.ativo).length }
   },
 
   async obterTaxa() {
@@ -173,6 +196,16 @@ export const supabaseApi = {
         .order('criado_em', { ascending: false }),
     )
     return d.map(normalizarPedido)
+  },
+
+  // No Supabase quem filtra é o RLS; aqui só identificamos se é o próprio cliente.
+  async obterPedido(id) {
+    const d = checar(
+      await supabase.from('pedidos').select('*, perfis(nome, telefone), pedido_itens(*, lojas(id, nome))').eq('id', id).maybeSingle(),
+    )
+    if (!d) return null
+    const { data } = await supabase.auth.getSession()
+    return { ...normalizarPedido(d), visao: d.cliente_id === data.session?.user.id ? 'cliente' : 'admin' }
   },
 
   async cancelarPedido(pedidoId) {
@@ -242,6 +275,10 @@ export const supabaseApi = {
         .order('criado_em', { ascending: false }),
     )
     return d.map(normalizarPedido)
+  },
+
+  async relatorioVendas(filtros) {
+    return montarRelatorio(await this.todosPedidos(), filtros)
   },
 
   async confirmarPagamento(pedidoId) {

@@ -149,3 +149,17 @@ export function TituloPagina({ titulo, children, acoes }) {
     </div>
   )
 }
+
+export function MaisProdutos({ mostrando, total, temMais, carregarMais, carregando }) {
+  if (!temMais) return null
+  return (
+    <div className="mt-12 flex flex-col items-center gap-2">
+      <Botao variante="secundario" onClick={carregarMais} carregando={carregando}>
+        Carregar mais
+      </Botao>
+      <p className="text-sm text-tinta-suave">
+        Mostrando {mostrando} de {total}
+      </p>
+    </div>
+  )
+}

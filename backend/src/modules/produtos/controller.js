@@ -14,6 +14,7 @@ const createSchema = z.object({
   estoque: z.number().int().min(0),
   ativo: z.boolean(),
   imagem_id: z.uuid().nullable().optional(),
+  categoria_id: z.string().max(40).nullable().optional(),
 }).strict()
 const updateSchema = createSchema.partial().extend({ versao: z.number().int().min(1) })
   .refine((value) => Object.keys(value).some((key) => key !== 'versao'))

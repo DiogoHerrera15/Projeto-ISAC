@@ -3,6 +3,7 @@
 // na finalização, estoque reservado, cancelamento devolve estoque, permissões
 // do administrador) para que o fluxo possa ser apresentado sem servidor.
 import { criarBaseDemo } from './demoSeed'
+import { montarRelatorio } from './relatorio'
 
 const CHAVE_DB = 'isac-market-demo-db-v1'
 const CHAVE_SESSAO = 'isac-market-demo-sessao'
@@ -26,8 +27,21 @@ function gravar(chave, valor) {
   }
 }
 
+// Bases salvas no navegador antes das categorias recebem as categorias
+// e a categoria dos produtos de exemplo, sem perder o resto dos dados.
+function atualizarBase(base) {
+  if (!base.categorias) {
+    const nova = criarBaseDemo()
+    base.categorias = nova.categorias
+    for (const p of base.produtos) {
+      if (!('categoria_id' in p)) p.categoria_id = nova.produtos.find((x) => x.id === p.id)?.categoria_id ?? null
+    }
+  }
+  return base
+}
+
 function db() {
-  if (!cache) cache = ler(CHAVE_DB) || criarBaseDemo()
+  if (!cache) cache = atualizarBase(ler(CHAVE_DB) || criarBaseDemo())
   return cache
 }
 function salvar() {
@@ -65,7 +79,20 @@ function lojaPorId(id) {
 }
 function comLoja(prod) {
   const l = lojaPorId(prod.loja_id)
-  return { ...copia(prod), loja: l ? { id: l.id, nome: l.nome, descricao: l.descricao, ativa: l.ativa } : null }
+  const c = db().categorias.find((x) => x.id === prod.categoria_id)
+  return {
+    ...copia(prod),
+    loja: l ? { id: l.id, nome: l.nome, descricao: l.descricao, ativa: l.ativa } : null,
+    categoria: c ? copia(c) : null,
+  }
+}
+
+// Mesmas ordens do backend; o id desempata para a paginação não repetir itens.
+const ORDENS = {
+  recentes: (a, b) => b.criado_em.localeCompare(a.criado_em) || b.id.localeCompare(a.id),
+  menor: (a, b) => a.preco - b.preco || a.id.localeCompare(b.id),
+  maior: (a, b) => b.preco - a.preco || b.id.localeCompare(a.id),
+  nome: (a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id),
 }
 function pedidoCompleto(p) {
   const base = db()
@@ -136,15 +163,25 @@ export const demoApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
+  async listarProdutos({ busca = '', lojaId = '', categoria = '', ordem = 'recentes' } = {}) {
     await espera()
     const termo = busca.trim().toLowerCase()
     return db()
       .produtos.filter((p) => p.ativo && lojaPorId(p.loja_id)?.ativa)
       .filter((p) => !termo || p.nome.toLowerCase().includes(termo))
       .filter((p) => !lojaId || p.loja_id === lojaId)
-      .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
+      .filter((p) => !categoria || p.categoria_id === categoria)
+      .sort(ORDENS[ordem] || ORDENS.recentes)
       .map(comLoja)
+  },
+
+  async listarProdutosPagina({ pagina = 1, limite = 12, ...filtros } = {}) {
+    const todos = await this.listarProdutos(filtros)
+    return { itens: todos.slice((pagina - 1) * limite, pagina * limite), total: todos.length }
+  },
+
+  async listarCategorias() {
+    return copia(db().categorias)
   },
 
   async obterProduto(id) {
@@ -162,6 +199,15 @@ export const demoApi = {
       .lojas.filter((l) => l.ativa)
       .sort((a, b) => a.nome.localeCompare(b.nome))
       .map(({ id, nome, descricao }) => ({ id, nome, descricao }))
+  },
+
+  async obterLoja(id) {
+    await espera(100)
+    const l = lojaPorId(id)
+    const s = sessao()
+    if (!l || !(l.ativa || l.vendedor_id === s?.id || ehAdmin())) return null
+    const { vendedor_id, ...loja } = copia(l)
+    return { ...loja, total_produtos: db().produtos.filter((p) => p.loja_id === id && p.ativo).length }
   },
 
   async obterTaxa() {
@@ -263,6 +309,30 @@ export const demoApi = {
       .map(pedidoCompleto)
   },
 
+  // Mesmas regras do backend: vendedora vê só os itens da sua loja.
+  async obterPedido(id) {
+    await espera(100)
+    const s = usuarioAtual()
+    const base = db()
+    const p = base.pedidos.find((x) => x.id === id)
+    if (!p) return null
+    const pedido = pedidoCompleto(p)
+    if (p.cliente_id === s.id) return { ...pedido, visao: 'cliente' }
+    if (ehAdmin()) return { ...pedido, visao: 'admin' }
+    const loja = base.lojas.find((l) => l.vendedor_id === s.id)
+    const itens = loja ? pedido.itens.filter((i) => i.loja_id === loja.id) : []
+    if (!itens.length) return null
+    const soma = (campo) => centavos(itens.reduce((t, i) => t + i[campo], 0))
+    return {
+      ...pedido,
+      itens,
+      valor_total: soma('subtotal'),
+      comissao_isac: soma('valor_comissao'),
+      valor_vendedores: soma('valor_vendedor'),
+      visao: 'vendedor',
+    }
+  },
+
   async cancelarPedido(pedidoId) {
     await espera()
     const s = usuarioAtual()
@@ -310,8 +380,8 @@ export const demoApi = {
     await espera()
     return db()
       .produtos.filter((p) => p.loja_id === lojaId)
-      .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
-      .map(copia)
+      .sort(ORDENS.recentes)
+      .map(comLoja)
   },
 
   async salvarProduto(produto) {
@@ -320,6 +390,7 @@ export const demoApi = {
     const campos = {
       nome: produto.nome,
       descricao: produto.descricao || null,
+      categoria_id: produto.categoria_id || null,
       preco: Number(produto.preco),
       foto_url: produto.foto_url || null,
       estoque: Number(produto.estoque),
@@ -396,6 +467,12 @@ export const demoApi = {
     await espera()
     if (!ehAdmin()) return []
     return [...db().pedidos].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(pedidoCompleto)
+  },
+
+  async relatorioVendas(filtros) {
+    await espera()
+    if (!ehAdmin()) throw new Error('Somente um administrador pode ver o relatório.')
+    return montarRelatorio(db().pedidos.map(pedidoCompleto), filtros)
   },
 
   async confirmarPagamento(pedidoId) {

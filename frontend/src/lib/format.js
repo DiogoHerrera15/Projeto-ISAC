@@ -12,6 +12,14 @@ export function dividirValor(subtotal, percentual) {
   return { comissao, vendedor: Math.round((subtotal - comissao) * 100) / 100 }
 }
 
+/** Ordens do catálogo; quem ordena é a camada de dados (backend ou demo). */
+export const ORDENS_PRODUTOS = {
+  recentes: 'Mais recentes',
+  menor: 'Menor preço',
+  maior: 'Maior preço',
+  nome: 'Nome (A–Z)',
+}
+
 /** Código curto e legível para um pedido (primeiros caracteres do UUID). */
 export const codigoPedido = (id) => `#${String(id).slice(0, 8).toUpperCase()}`
 
