@@ -26,8 +26,21 @@ function gravar(chave, valor) {
   }
 }
 
+// Bases salvas no navegador antes das categorias recebem as categorias
+// e a categoria dos produtos de exemplo, sem perder o resto dos dados.
+function atualizarBase(base) {
+  if (!base.categorias) {
+    const nova = criarBaseDemo()
+    base.categorias = nova.categorias
+    for (const p of base.produtos) {
+      if (!('categoria_id' in p)) p.categoria_id = nova.produtos.find((x) => x.id === p.id)?.categoria_id ?? null
+    }
+  }
+  return base
+}
+
 function db() {
-  if (!cache) cache = ler(CHAVE_DB) || criarBaseDemo()
+  if (!cache) cache = atualizarBase(ler(CHAVE_DB) || criarBaseDemo())
   return cache
 }
 function salvar() {
@@ -65,7 +78,20 @@ function lojaPorId(id) {
 }
 function comLoja(prod) {
   const l = lojaPorId(prod.loja_id)
-  return { ...copia(prod), loja: l ? { id: l.id, nome: l.nome, descricao: l.descricao, ativa: l.ativa } : null }
+  const c = db().categorias.find((x) => x.id === prod.categoria_id)
+  return {
+    ...copia(prod),
+    loja: l ? { id: l.id, nome: l.nome, descricao: l.descricao, ativa: l.ativa } : null,
+    categoria: c ? copia(c) : null,
+  }
+}
+
+// Mesmas ordens do backend; o id desempata para a paginação não repetir itens.
+const ORDENS = {
+  recentes: (a, b) => b.criado_em.localeCompare(a.criado_em) || b.id.localeCompare(a.id),
+  menor: (a, b) => a.preco - b.preco || a.id.localeCompare(b.id),
+  maior: (a, b) => b.preco - a.preco || b.id.localeCompare(a.id),
+  nome: (a, b) => a.nome.localeCompare(b.nome) || a.id.localeCompare(b.id),
 }
 function pedidoCompleto(p) {
   const base = db()
@@ -136,15 +162,20 @@ export const demoApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
+  async listarProdutos({ busca = '', lojaId = '', categoria = '', ordem = 'recentes' } = {}) {
     await espera()
     const termo = busca.trim().toLowerCase()
     return db()
       .produtos.filter((p) => p.ativo && lojaPorId(p.loja_id)?.ativa)
       .filter((p) => !termo || p.nome.toLowerCase().includes(termo))
       .filter((p) => !lojaId || p.loja_id === lojaId)
-      .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
+      .filter((p) => !categoria || p.categoria_id === categoria)
+      .sort(ORDENS[ordem] || ORDENS.recentes)
       .map(comLoja)
+  },
+
+  async listarCategorias() {
+    return copia(db().categorias)
   },
 
   async obterProduto(id) {
@@ -310,8 +341,8 @@ export const demoApi = {
     await espera()
     return db()
       .produtos.filter((p) => p.loja_id === lojaId)
-      .sort((a, b) => b.criado_em.localeCompare(a.criado_em))
-      .map(copia)
+      .sort(ORDENS.recentes)
+      .map(comLoja)
   },
 
   async salvarProduto(produto) {
@@ -320,6 +351,7 @@ export const demoApi = {
     const campos = {
       nome: produto.nome,
       descricao: produto.descricao || null,
+      categoria_id: produto.categoria_id || null,
       preco: Number(produto.preco),
       foto_url: produto.foto_url || null,
       estoque: Number(produto.estoque),

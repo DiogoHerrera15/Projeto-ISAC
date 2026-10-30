@@ -22,4 +22,5 @@ export async function listProducts(db, filters) {
 }
 
 export const listStores = repository.listStores
+export const listCategories = repository.listCategories
 export const getCommission = repository.getCommission

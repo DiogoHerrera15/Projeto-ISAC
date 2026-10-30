@@ -1,6 +1,6 @@
 import { HttpError } from '../../http/errors.js'
 import { ownStore } from '../lojas/service.js'
-import { fetchProduct } from '../catalogo/repository.js'
+import { categoryExists, fetchProduct } from '../catalogo/repository.js'
 import { publicProduct } from '../catalogo/service.js'
 import * as repository from './repository.js'
 
@@ -12,6 +12,12 @@ async function imageUrl(db, imageId, storeId) {
   return `/api/v1/imagens/${imageId}`
 }
 
+async function checkCategory(db, categoryId) {
+  if (categoryId && !(await categoryExists(db, categoryId))) {
+    throw new HttpError(400, 'ENTRADA_INVALIDA', 'Categoria inválida.', { fields: [{ field: 'categoria_id', message: 'Categoria inexistente' }] })
+  }
+}
+
 export async function listOwnProducts(db, userId, page) {
   const store = await ownStore(db, userId)
   if (!store) throw new HttpError(404, 'NAO_ENCONTRADO', 'Loja não encontrada.')
@@ -21,6 +27,7 @@ export async function listOwnProducts(db, userId, page) {
 export async function createProduct(db, userId, fields) {
   const store = await ownStore(db, userId)
   if (!store) throw new HttpError(404, 'NAO_ENCONTRADO', 'Loja não encontrada.')
+  await checkCategory(db, fields.categoria_id)
   const url = await imageUrl(db, fields.imagem_id, store.id)
   const id = await repository.createProduct(db, store.id, fields, url)
   return publicProduct(await fetchProduct(db, id))
@@ -31,6 +38,7 @@ export async function updateProduct(db, userId, id, fields) {
   if (!existing || existing.vendedor_id !== userId) {
     throw new HttpError(404, 'NAO_ENCONTRADO', 'Produto não encontrado.')
   }
+  await checkCategory(db, fields.categoria_id)
   const imageId = fields.imagem_id === undefined ? existing.imagem_id : fields.imagem_id
   const url = fields.imagem_id === undefined ? existing.foto_url : await imageUrl(db, imageId, existing.loja_id)
   const updated = await repository.updateProduct(db, existing, fields, imageId, url)

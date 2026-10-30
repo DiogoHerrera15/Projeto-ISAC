@@ -162,9 +162,13 @@ export const backendApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
-    const produtos = await listarTudo('/produtos', { busca: busca.trim(), lojaId })
+  async listarProdutos({ busca = '', lojaId = '', categoria = '', ordem = 'recentes' } = {}) {
+    const produtos = await listarTudo('/produtos', { busca: busca.trim(), lojaId, categoria, ordem })
     return produtos.map(normalizarProduto)
+  },
+
+  async listarCategorias() {
+    return (await requisicao('GET', '/categorias')).data
   },
 
   async obterProduto(id) {
@@ -253,10 +257,11 @@ export const backendApi = {
   },
 
   async salvarProduto(produto) {
-    const { id, nome, descricao, preco, foto_url, estoque, ativo, versao } = produto
+    const { id, nome, descricao, preco, foto_url, estoque, ativo, versao, categoria_id } = produto
     const campos = {
       nome,
       descricao: descricao || null,
+      categoria_id: categoria_id || null,
       preco: Number(preco).toFixed(2),
       estoque,
       ativo,

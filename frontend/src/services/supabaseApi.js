@@ -91,13 +91,18 @@ export const supabaseApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '' } = {}) {
+  // O banco Supabase não tem categorias: o filtro por categoria é ignorado neste modo.
+  async listarProdutos({ busca = '', lojaId = '', ordem = 'recentes' } = {}) {
+    const [coluna, ascending] = { menor: ['preco', true], maior: ['preco', false], nome: ['nome', true] }[ordem] || [
+      'criado_em',
+      false,
+    ]
     let q = supabase
       .from('produtos')
       .select(`${CAMPOS_PRODUTO}, lojas!inner(id, nome, ativa)`)
       .eq('ativo', true)
       .eq('lojas.ativa', true)
-      .order('criado_em', { ascending: false })
+      .order(coluna, { ascending })
     if (busca.trim()) q = q.ilike('nome', `%${busca.trim()}%`)
     if (lojaId) q = q.eq('loja_id', lojaId)
     return checar(await q).map(normalizarProduto)
@@ -112,6 +117,10 @@ export const supabaseApi = {
         .maybeSingle(),
     )
     return normalizarProduto(p)
+  },
+
+  async listarCategorias() {
+    return []
   },
 
   async listarLojasAtivas() {

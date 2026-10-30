@@ -12,10 +12,10 @@ const stores = [
   ['20000000-0000-4000-8000-000000000002', people[2][0], 'Horta do Gaibu', 'Verduras e temperos da horta comunitária.'],
 ]
 const products = [
-  ['30000000-0000-4000-8000-000000000001', stores[0][0], 'Bolo de rolo', '35.00', 8],
-  ['30000000-0000-4000-8000-000000000002', stores[0][0], 'Cocada de forno', '18.00', 15],
-  ['30000000-0000-4000-8000-000000000003', stores[1][0], 'Cesta de verduras', '30.00', 12],
-  ['30000000-0000-4000-8000-000000000004', stores[1][0], 'Kit de mudas', '15.00', 20],
+  ['30000000-0000-4000-8000-000000000001', stores[0][0], 'Bolo de rolo', '35.00', 8, 'doces'],
+  ['30000000-0000-4000-8000-000000000002', stores[0][0], 'Cocada de forno', '18.00', 15, 'doces'],
+  ['30000000-0000-4000-8000-000000000003', stores[1][0], 'Cesta de verduras', '30.00', 12, 'hortifruti'],
+  ['30000000-0000-4000-8000-000000000004', stores[1][0], 'Kit de mudas', '15.00', 20, 'hortifruti'],
 ]
 
 export async function seedDemo(pool) {
@@ -31,9 +31,12 @@ export async function seedDemo(pool) {
       await db.query(`insert into lojas(id, vendedor_id, nome, descricao)
         values ($1, $2, $3, $4) on conflict (id) do nothing`, [id, sellerId, name, description])
     }
-    for (const [id, storeId, name, price, stock] of products) {
-      await db.query(`insert into produtos(id, loja_id, nome, preco, estoque)
-        values ($1, $2, $3, $4, $5) on conflict (id) do nothing`, [id, storeId, name, price, stock])
+    // Rodar de novo só preenche a categoria de produtos que estão sem; não troca uma categoria já escolhida.
+    for (const [id, storeId, name, price, stock, category] of products) {
+      await db.query(`insert into produtos(id, loja_id, nome, preco, estoque, categoria_id)
+        values ($1, $2, $3, $4, $5, $6)
+        on conflict (id) do update set categoria_id = coalesce(produtos.categoria_id, excluded.categoria_id)`,
+      [id, storeId, name, price, stock, category])
     }
   })
 }

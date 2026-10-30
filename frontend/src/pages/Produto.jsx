@@ -99,6 +99,14 @@ export default function Produto() {
             </Link>
           )}
           <h1 className="mt-1 text-5xl sm:text-6xl font-extrabold">{produto.nome}</h1>
+          {produto.categoria && (
+            <Link
+              to={`/produtos?categoria=${produto.categoria.id}`}
+              className="mt-3 inline-block rounded-full border border-linha bg-white px-3 py-0.5 text-sm font-bold text-tinta-suave hover:border-mar hover:text-mar"
+            >
+              {produto.categoria.nome}
+            </Link>
+          )}
           <div className="mt-5">
             <Etiqueta valor={produto.preco} tamanho="g" />
           </div>

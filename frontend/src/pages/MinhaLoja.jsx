@@ -5,7 +5,7 @@ import { api } from '../services/api'
 import { codigoPedido, dividirValor, formatarDataHora, formatarMoeda, mensagemDeErro } from '../lib/format'
 import ProdutoImagem from '../components/ProdutoImagem'
 import StatusPedido from '../components/StatusPedido'
-import { Abas, Aviso, Botao, BotaoLink, Campo, Carregando, TituloPagina, Vazio } from '../components/ui'
+import { Abas, Aviso, Botao, BotaoLink, Campo, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
 
 // ---------------------------------------------------------------------------
 // Abrir loja
@@ -70,7 +70,7 @@ function AbrirLoja({ aoCriar, taxa }) {
 // ---------------------------------------------------------------------------
 // Formulário de produto
 // ---------------------------------------------------------------------------
-const PRODUTO_VAZIO = { nome: '', descricao: '', preco: '', estoque: '1', foto_url: '', ativo: true }
+const PRODUTO_VAZIO = { nome: '', descricao: '', categoria_id: '', preco: '', estoque: '1', foto_url: '', ativo: true }
 
 function FormProduto({ loja, produto, taxa, aoSalvar, aoCancelar }) {
   const [dados, setDados] = useState(() =>
@@ -80,7 +80,12 @@ function FormProduto({ loja, produto, taxa, aoSalvar, aoCancelar }) {
   const [previa, setPrevia] = useState(produto?.foto_url || '')
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [categorias, setCategorias] = useState([])
   const inputArquivo = useRef(null)
+
+  useEffect(() => {
+    api.listarCategorias().then(setCategorias).catch(() => {})
+  }, [])
 
   const mudar = (campo) => (e) =>
     setDados((d) => ({ ...d, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
@@ -173,6 +178,29 @@ function FormProduto({ loja, produto, taxa, aoSalvar, aoCancelar }) {
             value={dados.descricao || ''}
             onChange={mudar('descricao')}
           />
+          {categorias.length > 0 && (
+            <div>
+              <label htmlFor="categoria-produto" className="block font-bold mb-1.5">
+                Categoria
+              </label>
+              <Selecao
+                id="categoria-produto"
+                value={dados.categoria_id || ''}
+                onChange={mudar('categoria_id')}
+                aria-describedby="categoria-produto-dica"
+              >
+                <option value="">Sem categoria</option>
+                {categorias.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.nome}
+                  </option>
+                ))}
+              </Selecao>
+              <p id="categoria-produto-dica" className="mt-1 text-sm text-tinta-suave">
+                Ajuda quem compra a achar o produto no catálogo.
+              </p>
+            </div>
+          )}
           <div className="grid gap-5 sm:grid-cols-2">
             <Campo
               rotulo="Preço (R$)"
@@ -270,6 +298,7 @@ function AbaProdutos({ loja, taxa }) {
               <div className="flex-1 min-w-0">
                 <p className="font-bold truncate">{p.nome}</p>
                 <p className="text-sm text-tinta-suave">
+                  {p.categoria && <>{p.categoria.nome} · </>}
                   {formatarMoeda(p.preco)} · {p.estoque === 0 ? <span className="text-alerta font-bold">sem estoque</span> : `${p.estoque} em estoque`}
                   {!p.ativo && <span className="ml-2 font-bold">· pausado</span>}
                 </p>

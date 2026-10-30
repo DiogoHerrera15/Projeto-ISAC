@@ -11,6 +11,16 @@ export const CONTAS_DEMO = [
 
 const dias = (n) => new Date(Date.now() - n * 86400000).toISOString()
 
+// Mesmas categorias da migration 002 do backend.
+export const CATEGORIAS_DEMO = [
+  { id: 'doces', nome: 'Doces e salgados' },
+  { id: 'hortifruti', nome: 'Horta e mel' },
+  { id: 'artesanato', nome: 'Artesanato' },
+  { id: 'moda', nome: 'Roupas e acessórios' },
+  { id: 'casa', nome: 'Casa e decoração' },
+  { id: 'outros', nome: 'Outros' },
+]
+
 export function criarBaseDemo() {
   const usuarios = [
     { id: 'u-admin', email: 'admin@isac.org', senha: SENHA_DEMO },
@@ -55,21 +65,21 @@ export function criarBaseDemo() {
     },
   ]
 
-  const p = (id, loja_id, nome, preco, estoque, descricao, idade) => ({
-    id, loja_id, nome, preco, estoque, descricao, foto_url: null, ativo: true, criado_em: dias(idade),
+  const p = (id, loja_id, nome, preco, estoque, descricao, idade, categoria_id) => ({
+    id, loja_id, categoria_id, nome, preco, estoque, descricao, foto_url: null, ativo: true, criado_em: dias(idade),
   })
 
   const produtos = [
-    p('p-bolo-rolo', 'l-doces', 'Bolo de rolo de goiaba', 35, 8, 'Massa fininha, enrolada camada por camada com goiabada caseira. Cerca de 500 g.', 30),
-    p('p-cocada', 'l-doces', 'Cocada de forno (6 unidades)', 18, 15, 'Cocada cremosa por dentro e dourada por cima, feita com coco fresco ralado na hora.', 28),
-    p('p-pe-moleque', 'l-doces', 'Pé de moleque pernambucano', 22, 10, 'A receita de massa de mandioca com castanha, assada na folha de bananeira.', 25),
-    p('p-bolo-macaxeira', 'l-doces', 'Bolo de macaxeira', 28, 6, 'Bolo úmido de macaxeira com leite de coco. Forma de 20 cm.', 12),
-    p('p-cesta-verduras', 'l-horta', 'Cesta de verduras da semana', 30, 12, 'Alface, coentro, cebolinha, couve e o que estiver na época. Colhida no dia da entrega.', 22),
-    p('p-mel', 'l-horta', 'Mel de abelha (500 ml)', 40, 9, 'Mel puro das caixas de abelha da horta, envasado em pote de vidro.', 20),
-    p('p-mudas', 'l-horta', 'Kit de mudas de tempero', 15, 20, 'Quatro mudas em copinho: coentro, cebolinha, manjericão e hortelã.', 8),
-    p('p-pano-prato', 'l-atelie', 'Pano de prato bordado', 25, 14, 'Algodão grosso com barrado de chita e bordado de flores feito à mão.', 26),
-    p('p-bolsa-chita', 'l-atelie', 'Bolsa de chita com forro', 60, 5, 'Bolsa de ombro em chita florida, forrada, com bolso interno e fecho de botão.', 18),
-    p('p-toalha-renda', 'l-atelie', 'Toalha de mesa em renda renascença', 120, 2, 'Toalha de 1,40 m com acabamento em renda renascença. Peça única.', 10),
+    p('p-bolo-rolo', 'l-doces', 'Bolo de rolo de goiaba', 35, 8, 'Massa fininha, enrolada camada por camada com goiabada caseira. Cerca de 500 g.', 30, 'doces'),
+    p('p-cocada', 'l-doces', 'Cocada de forno (6 unidades)', 18, 15, 'Cocada cremosa por dentro e dourada por cima, feita com coco fresco ralado na hora.', 28, 'doces'),
+    p('p-pe-moleque', 'l-doces', 'Pé de moleque pernambucano', 22, 10, 'A receita de massa de mandioca com castanha, assada na folha de bananeira.', 25, 'doces'),
+    p('p-bolo-macaxeira', 'l-doces', 'Bolo de macaxeira', 28, 6, 'Bolo úmido de macaxeira com leite de coco. Forma de 20 cm.', 12, 'doces'),
+    p('p-cesta-verduras', 'l-horta', 'Cesta de verduras da semana', 30, 12, 'Alface, coentro, cebolinha, couve e o que estiver na época. Colhida no dia da entrega.', 22, 'hortifruti'),
+    p('p-mel', 'l-horta', 'Mel de abelha (500 ml)', 40, 9, 'Mel puro das caixas de abelha da horta, envasado em pote de vidro.', 20, 'hortifruti'),
+    p('p-mudas', 'l-horta', 'Kit de mudas de tempero', 15, 20, 'Quatro mudas em copinho: coentro, cebolinha, manjericão e hortelã.', 8, 'hortifruti'),
+    p('p-pano-prato', 'l-atelie', 'Pano de prato bordado', 25, 14, 'Algodão grosso com barrado de chita e bordado de flores feito à mão.', 26, 'casa'),
+    p('p-bolsa-chita', 'l-atelie', 'Bolsa de chita com forro', 60, 5, 'Bolsa de ombro em chita florida, forrada, com bolso interno e fecho de botão.', 18, 'moda'),
+    p('p-toalha-renda', 'l-atelie', 'Toalha de mesa em renda renascença', 120, 2, 'Toalha de 1,40 m com acabamento em renda renascença. Peça única.', 10, 'casa'),
   ]
 
   // Pedidos de exemplo para o painel ter números desde o início.
@@ -122,6 +132,7 @@ export function criarBaseDemo() {
     perfis,
     lojas,
     produtos,
+    categorias: CATEGORIAS_DEMO,
     carrinho_itens: [],
     pedidos,
     pedido_itens,

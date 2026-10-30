@@ -12,7 +12,7 @@ test('instala schema isolado e inicia a API', async (t) => {
   const response = await request(c.app).get('/api/v1/health').expect(200)
   assert.deepEqual(response.body, { data: { status: 'ok' } })
   const tables = await c.consultar("select tablename from pg_tables where schemaname = current_schema()")
-  assert.equal(tables.rows.length, 11)
+  assert.equal(tables.rows.length, 12)
 })
 
 test('segunda migração não reaplica alterações', async (t) => {
@@ -20,8 +20,8 @@ test('segunda migração não reaplica alterações', async (t) => {
   const before = await c.consultar('select count(*)::int as count from schema_migrations')
   await c.migrate()
   const after = await c.consultar('select count(*)::int as count from schema_migrations')
-  assert.equal(before.rows[0].count, 1)
-  assert.equal(after.rows[0].count, 1)
+  assert.equal(before.rows[0].count, 2)
+  assert.equal(after.rows[0].count, 2)
 })
 
 test('falha na migração desfaz as alterações anteriores', async (t) => {
