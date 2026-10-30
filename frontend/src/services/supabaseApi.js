@@ -2,6 +2,7 @@
 // (database/ISAC_Market_banco_supabase.sql). As regras de permissão ficam no
 // banco (RLS); aqui só fazemos as consultas e chamamos as funções públicas.
 import { supabase } from '../lib/supabase'
+import { montarRelatorio } from './relatorio'
 
 const BUCKET = 'isac-produtos'
 
@@ -270,6 +271,10 @@ export const supabaseApi = {
         .order('criado_em', { ascending: false }),
     )
     return d.map(normalizarPedido)
+  },
+
+  async relatorioVendas(filtros) {
+    return montarRelatorio(await this.todosPedidos(), filtros)
   },
 
   async confirmarPagamento(pedidoId) {

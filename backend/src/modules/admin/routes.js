@@ -10,5 +10,6 @@ export function registerAdminRoutes(app, pool) {
   app.patch('/api/v1/admin/lojas/:id', ...auth, controller.updateStore)
   app.get('/api/v1/admin/produtos', ...auth, controller.listProducts)
   app.patch('/api/v1/admin/produtos/:id', ...auth, controller.updateProduct)
+  app.get('/api/v1/admin/relatorios/vendas', ...auth, controller.salesReport)
   app.patch('/api/v1/admin/configuracoes/comissao', ...auth, controller.updateCommission)
 }

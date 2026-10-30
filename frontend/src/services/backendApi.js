@@ -329,6 +329,18 @@ export const backendApi = {
     return pedidos.map(normalizarPedido)
   },
 
+  // de/ate no formato AAAA-MM-DD (opcionais); agrupar: dia, semana ou mes.
+  async relatorioVendas({ de = '', ate = '', agrupar = 'dia' } = {}) {
+    const { data } = await requisicao('GET', '/admin/relatorios/vendas', { consulta: { de, ate, agrupar } })
+    const valores = (l) => ({
+      ...l,
+      valor_total: num(l.valor_total),
+      comissao_isac: num(l.comissao_isac),
+      valor_vendedores: num(l.valor_vendedores),
+    })
+    return { ...data, totais: valores(data.totais), por_periodo: data.por_periodo.map(valores), por_loja: data.por_loja.map(valores) }
+  },
+
   async confirmarPagamento(pedidoId) {
     await requisicao('POST', `/admin/pedidos/${pedidoId}/confirmacao`, { corpo: {} })
   },

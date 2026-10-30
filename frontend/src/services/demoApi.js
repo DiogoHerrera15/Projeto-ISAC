@@ -3,6 +3,7 @@
 // na finalização, estoque reservado, cancelamento devolve estoque, permissões
 // do administrador) para que o fluxo possa ser apresentado sem servidor.
 import { criarBaseDemo } from './demoSeed'
+import { montarRelatorio } from './relatorio'
 
 const CHAVE_DB = 'isac-market-demo-db-v1'
 const CHAVE_SESSAO = 'isac-market-demo-sessao'
@@ -461,6 +462,12 @@ export const demoApi = {
     await espera()
     if (!ehAdmin()) return []
     return [...db().pedidos].sort((a, b) => b.criado_em.localeCompare(a.criado_em)).map(pedidoCompleto)
+  },
+
+  async relatorioVendas(filtros) {
+    await espera()
+    if (!ehAdmin()) throw new Error('Somente um administrador pode ver o relatório.')
+    return montarRelatorio(db().pedidos.map(pedidoCompleto), filtros)
   },
 
   async confirmarPagamento(pedidoId) {

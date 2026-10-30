@@ -7,6 +7,11 @@ import * as service from './service.js'
 const flagStore = z.object({ ativa: z.boolean() }).strict()
 const flagProduct = z.object({ ativo: z.boolean(), versao: z.number().int().min(1) }).strict()
 const rateSchema = z.object({ percentual_comissao: z.string() }).strict()
+const reportSchema = z.object({
+  de: z.iso.date().optional(),
+  ate: z.iso.date().optional(),
+  agrupar: z.enum(['dia', 'semana', 'mes']).optional(),
+}).strict()
 
 function uuid(req, entity) {
   if (!z.uuid().safeParse(req.params.id).success) {
@@ -45,6 +50,9 @@ export function createAdminController(pool) {
       const id = uuid(req, 'Produto')
       const { ativo, versao } = validate(flagProduct, req.body)
       res.json({ data: await service.updateProduct(pool, id, ativo, versao) })
+    },
+    async salesReport(req, res) {
+      res.json({ data: await service.salesReport(pool, validate(reportSchema, req.query)) })
     },
     async updateCommission(req, res) {
       const { percentual_comissao } = validate(rateSchema, req.body)
