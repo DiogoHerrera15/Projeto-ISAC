@@ -32,8 +32,8 @@ cd backend
 cp .env.example .env
 docker compose up -d
 npm install
-npm run db:migrate
-npm run db:seed -- --demo
+npm run db:migrate          # aplica também a 002 (categorias) em bancos antigos
+npm run db:seed -- --demo   # rodar de novo preenche a categoria dos produtos de exemplo
 npm run dev
 ```
 
@@ -67,19 +67,20 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 - Mostre "Chegou agora" e as lojas.
 
 ### 2.3 Compra como cliente (2 min) — `cliente@exemplo.com`
-1. **Produtos**: busca e filtro por loja.
-2. Abra um produto e mostre a divisão do valor.
+1. **Produtos**: digite na busca (ela consulta sozinha quando você para de digitar), filtre por **categoria** e ordene por **menor preço**. Role até o fim e use **Carregar mais**.
+2. Abra um produto: mostre a categoria e a divisão do valor. Clique no nome da loja para abrir a **página da loja** (descrição e produtos dela).
 3. Adicione itens de **lojas diferentes** ao carrinho (ele agrupa por loja).
 4. **Finalizar pedido** (pede telefone com DDD para as lojas combinarem a entrega).
-5. **Meus pedidos**: o pedido aparece como *pendente*. Mostre o cancelamento (o estoque volta).
+5. Clique em **Ver este pedido**: a página de detalhe mostra itens, status e quanto vai para cada loja e para o ISAC.
+6. **Meus pedidos**: o pedido aparece como *pendente*. Mostre o cancelamento (o estoque volta).
 
 ### 2.4 Vendedora — `lucia@exemplo.com` (2 min)
-- **Minha loja**: cadastro de produtos com foto, preço e estoque.
-- Aba **Vendas**: pedidos recebidos com o contato do cliente e quanto ela recebe (já descontada a comissão).
+- **Minha loja**: cadastro de produtos com foto, **categoria**, preço e estoque. **Ver como cliente** abre a página pública da loja.
+- Aba **Vendas**: pedidos recebidos com o contato do cliente e quanto ela recebe (já descontada a comissão). Clique no código de um pedido: no detalhe ela vê **só os itens da loja dela**, não o que o cliente comprou em outras lojas.
 
 ### 2.5 Administração — `admin@isac.org` (2 min)
-- **Pedidos**: confirme o pagamento (simulado). Nesse momento a venda passa a contar nos totais.
-- Resumo de **comissões** do ISAC.
+- **Pedidos**: confirme o pagamento (simulado), na lista ou na página de detalhe. Nesse momento a venda passa a contar nos totais.
+- **Resumo**: escolha o período (7, 30, 90 dias, 12 meses ou datas próprias) e o agrupamento. Mostre os totais (vendido, comissão do ISAC, valor das lojas), passe o mouse no **gráfico** e mostre a tabela **por loja**. Clique em **Exportar CSV** e abra no Excel/Planilhas.
 - Alterar a **taxa de comissão** e pausar lojas ou produtos.
 
 ### 2.6 Engenharia (2 min)
@@ -98,6 +99,8 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 
 **O que impede vender mais do que o estoque?** O checkout trava os produtos durante a compra e confere o estoque. Há um teste de concorrência para isso.
 
+**Como o relatório conta as vendas?** Só pedidos confirmados, pela data da confirmação (fuso de Recife). Pendentes e cancelados ficam de fora.
+
 **O que ainda falta?** Veja a seção abaixo.
 
 ## 4. Limitações conhecidas (diga com franqueza)
@@ -106,4 +109,6 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 - Não há recuperação nem troca de senha, nem confirmação de e-mail.
 - As fotos ficam em disco local; em hospedagem seria preciso armazenamento externo.
 - O frontend ainda não tem testes automatizados.
+- As categorias são uma lista fixa (migration 002); ainda não há tela para a administração criá-las ou editá-las.
+- O layout no celular ainda não foi revisado tela a tela depois das novidades.
 - O backend ainda não foi publicado em hospedagem.
