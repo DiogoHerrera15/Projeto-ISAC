@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api'
-import { ORDENS_PRODUTOS as ORDENS, mensagemDeErro } from '../lib/format'
+import { ORDENS_PRODUTOS as ORDENS } from '../lib/format'
+import { useProdutosPaginados } from '../lib/useProdutosPaginados'
 import ProdutoCard from '../components/ProdutoCard'
-import { Aviso, Botao, BotaoLink, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
+import { Aviso, Botao, BotaoLink, Carregando, MaisProdutos, Selecao, TituloPagina, Vazio } from '../components/ui'
+
+const ESPERA_DIGITACAO = 400
 
 export default function Catalogo() {
   const [params, setParams] = useSearchParams()
@@ -13,32 +16,31 @@ export default function Catalogo() {
   const ordem = ORDENS[params.get('ordem')] ? params.get('ordem') : 'recentes'
 
   const [texto, setTexto] = useState(busca)
-  const [produtos, setProdutos] = useState(null)
   const [lojas, setLojas] = useState([])
   const [categorias, setCategorias] = useState([])
-  const [erro, setErro] = useState('')
+  const { produtos, total, temMais, carregarMais, carregandoMais, erro } = useProdutosPaginados({
+    busca,
+    lojaId,
+    categoria,
+    ordem,
+  })
 
   useEffect(() => {
     api.listarLojasAtivas().then(setLojas).catch(() => {})
     api.listarCategorias().then(setCategorias).catch(() => {})
   }, [])
 
+  // Busca enquanto digita: espera a pessoa parar por um instante antes de consultar.
   useEffect(() => {
-    let ativo = true
-    setProdutos(null)
-    setErro('')
-    api
-      .listarProdutos({ busca, lojaId, categoria, ordem })
-      .then((p) => ativo && setProdutos(p))
-      .catch((e) => {
-        if (!ativo) return
-        setErro(mensagemDeErro(e))
-        setProdutos([])
-      })
-    return () => {
-      ativo = false
-    }
-  }, [busca, lojaId, categoria, ordem])
+    if (texto.trim() === busca) return
+    const espera = setTimeout(() => atualizar('busca', texto.trim()), ESPERA_DIGITACAO)
+    return () => clearTimeout(espera)
+  }, [texto, busca])
+
+  // A busca pode mudar fora do campo (voltar do navegador, "Limpar filtros", link do menu).
+  useEffect(() => {
+    setTexto((atual) => (atual.trim() === busca ? atual : busca))
+  }, [busca])
 
   // Parte da URL do navegador, e não de `params`: a navegação do React Router
   // roda em transição e `params` pode ainda não ter a mudança anterior.
@@ -160,7 +162,7 @@ export default function Catalogo() {
       ) : (
         <>
           <p className="text-tinta-suave mb-6" aria-live="polite">
-            {produtos.length} {produtos.length === 1 ? 'produto' : 'produtos'}
+            {total} {total === 1 ? 'produto' : 'produtos'}
             {busca && <> para “{busca}”</>}
             {categoriaAtual && <> em {categoriaAtual.nome}</>}
           </p>
@@ -169,6 +171,7 @@ export default function Catalogo() {
               <ProdutoCard key={p.id} produto={p} />
             ))}
           </div>
+          <MaisProdutos mostrando={produtos.length} total={total} temMais={temMais} carregarMais={carregarMais} carregando={carregandoMais} />
         </>
       )}
     </div>

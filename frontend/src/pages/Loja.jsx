@@ -4,15 +4,17 @@ import { api } from '../services/api'
 import { ORDENS_PRODUTOS, formatarData, mensagemDeErro } from '../lib/format'
 import { useAuth } from '../context/AuthContext'
 import ProdutoCard from '../components/ProdutoCard'
-import { Aviso, BotaoLink, Carregando, Selecao, Vazio } from '../components/ui'
+import { useProdutosPaginados } from '../lib/useProdutosPaginados'
+import { Aviso, BotaoLink, Carregando, MaisProdutos, Selecao, Vazio } from '../components/ui'
 
 export default function Loja() {
   const { id } = useParams()
   const { usuario } = useAuth()
   const [loja, setLoja] = useState(undefined)
-  const [produtos, setProdutos] = useState(null)
   const [ordem, setOrdem] = useState('recentes')
   const [erro, setErro] = useState('')
+  const lista = useProdutosPaginados({ lojaId: id, ordem })
+  const { produtos } = lista
 
   useEffect(() => {
     setLoja(undefined)
@@ -21,22 +23,6 @@ export default function Loja() {
       setLoja(null)
     })
   }, [id, usuario?.id])
-
-  useEffect(() => {
-    let ativo = true
-    setProdutos(null)
-    api
-      .listarProdutos({ lojaId: id, ordem })
-      .then((p) => ativo && setProdutos(p))
-      .catch((e) => {
-        if (!ativo) return
-        setErro(mensagemDeErro(e))
-        setProdutos([])
-      })
-    return () => {
-      ativo = false
-    }
-  }, [id, ordem])
 
   if (loja === undefined) return <Carregando />
   if (!loja)
@@ -72,7 +58,7 @@ export default function Loja() {
         )}
       </header>
 
-      {erro && <Aviso tipo="erro" className="mb-6">{erro}</Aviso>}
+      {lista.erro && <Aviso tipo="erro" className="mb-6">{lista.erro}</Aviso>}
 
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h2 className="text-3xl font-extrabold">Produtos</h2>
@@ -95,11 +81,20 @@ export default function Loja() {
       ) : produtos.length === 0 ? (
         <Vazio titulo="Nenhum produto à venda agora">Volte em breve: a loja pode estar preparando novidades.</Vazio>
       ) : (
-        <div className="grid gap-x-4 sm:gap-x-6 gap-y-10 grid-cols-2 lg:grid-cols-4">
-          {produtos.map((p) => (
-            <ProdutoCard key={p.id} produto={p} />
-          ))}
-        </div>
+        <>
+          <div className="grid gap-x-4 sm:gap-x-6 gap-y-10 grid-cols-2 lg:grid-cols-4">
+            {produtos.map((p) => (
+              <ProdutoCard key={p.id} produto={p} />
+            ))}
+          </div>
+          <MaisProdutos
+            mostrando={produtos.length}
+            total={lista.total}
+            temMais={lista.temMais}
+            carregarMais={lista.carregarMais}
+            carregando={lista.carregandoMais}
+          />
+        </>
       )}
     </div>
   )

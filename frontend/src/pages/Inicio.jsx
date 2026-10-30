@@ -62,7 +62,10 @@ export default function Inicio() {
 
   useEffect(() => {
     api.obterTaxa().then(setTaxa).catch(() => {})
-    api.listarProdutos().then((p) => setProdutos(p.slice(0, 8))).catch(() => setProdutos([]))
+    api
+      .listarProdutosPagina({ limite: 8 })
+      .then((r) => setProdutos(r.itens))
+      .catch(() => setProdutos([]))
     api.listarLojasAtivas().then(setLojas).catch(() => {})
   }, [])
 

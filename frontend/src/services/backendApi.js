@@ -162,9 +162,12 @@ export const backendApi = {
   },
 
   // ---------- Catálogo ----------
-  async listarProdutos({ busca = '', lojaId = '', categoria = '', ordem = 'recentes' } = {}) {
-    const produtos = await listarTudo('/produtos', { busca: busca.trim(), lojaId, categoria, ordem })
-    return produtos.map(normalizarProduto)
+  // Uma página do catálogo: { itens, total }. Usado pelo "Carregar mais".
+  async listarProdutosPagina({ busca = '', lojaId = '', categoria = '', ordem = 'recentes', pagina = 1, limite = 12 } = {}) {
+    const { data, meta } = await requisicao('GET', '/produtos', {
+      consulta: { busca: busca.trim(), lojaId, categoria, ordem, pagina, limite },
+    })
+    return { itens: data.map(normalizarProduto), total: meta.total }
   },
 
   async listarCategorias() {

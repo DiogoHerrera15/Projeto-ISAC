@@ -175,6 +175,11 @@ export const demoApi = {
       .map(comLoja)
   },
 
+  async listarProdutosPagina({ pagina = 1, limite = 12, ...filtros } = {}) {
+    const todos = await this.listarProdutos(filtros)
+    return { itens: todos.slice((pagina - 1) * limite, pagina * limite), total: todos.length }
+  },
+
   async listarCategorias() {
     return copia(db().categorias)
   },
