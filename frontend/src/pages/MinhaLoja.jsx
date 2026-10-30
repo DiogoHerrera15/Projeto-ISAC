@@ -374,7 +374,9 @@ function AbaVendas() {
             {vendas.map((v, i) => (
               <tr key={`${v.pedido_id}-${i}`} className="border-b border-linha align-top">
                 <td className="py-3">
-                  <span className="font-bold">{codigoPedido(v.pedido_id)}</span>
+                  <Link to={`/pedidos/${v.pedido_id}`} className="font-bold text-mar hover:underline">
+                    {codigoPedido(v.pedido_id)}
+                  </Link>
                   <span className="block text-sm text-tinta-suave">{formatarDataHora(v.criado_em)}</span>
                 </td>
                 <td className="py-3">

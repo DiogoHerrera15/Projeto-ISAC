@@ -125,7 +125,9 @@ function LinhaPedido({ pedido, aoAlterar }) {
     <li className="bg-white border-2 border-linha rounded-lg">
       <div className="p-4 sm:p-5 grid gap-3 sm:grid-cols-[1fr_auto] items-center">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-          <span className="font-display text-2xl font-extrabold">{codigoPedido(pedido.id)}</span>
+          <Link to={`/pedidos/${pedido.id}`} className="font-display text-2xl font-extrabold hover:text-mar hover:underline">
+            {codigoPedido(pedido.id)}
+          </Link>
           <StatusPedido status={pedido.status} />
           <span className="text-sm text-tinta-suave">{formatarDataHora(pedido.criado_em)}</span>
           <span className="w-full text-sm">

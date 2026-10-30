@@ -21,7 +21,7 @@ function PedidoRegistrado({ pedidoId }) {
         Enquanto estiver aguardando pagamento, você pode cancelar o pedido em “Meus pedidos”.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
-        <BotaoLink to="/pedidos">Ver meus pedidos</BotaoLink>
+        <BotaoLink to={`/pedidos/${pedidoId}`}>Ver este pedido</BotaoLink>
         <BotaoLink to="/produtos" variante="secundario">
           Continuar comprando
         </BotaoLink>

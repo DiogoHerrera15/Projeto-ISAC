@@ -193,6 +193,16 @@ export const supabaseApi = {
     return d.map(normalizarPedido)
   },
 
+  // No Supabase quem filtra é o RLS; aqui só identificamos se é o próprio cliente.
+  async obterPedido(id) {
+    const d = checar(
+      await supabase.from('pedidos').select('*, perfis(nome, telefone), pedido_itens(*, lojas(id, nome))').eq('id', id).maybeSingle(),
+    )
+    if (!d) return null
+    const { data } = await supabase.auth.getSession()
+    return { ...normalizarPedido(d), visao: d.cliente_id === data.session?.user.id ? 'cliente' : 'admin' }
+  },
+
   async cancelarPedido(pedidoId) {
     checar(await supabase.rpc('cancelar_pedido', { p_pedido_id: pedidoId }))
   },

@@ -3,7 +3,7 @@ import { validate } from '../../http/validation.js'
 import { HttpError } from '../../http/errors.js'
 import { pagination, paged } from '../../http/pagination.js'
 import { checkout } from './checkout.js'
-import { listOrders } from './service.js'
+import { getOrderFor, listOrders } from './service.js'
 import { cancelOrder } from './transicoes.js'
 
 const emptyBody = z.object({}).strict()
@@ -21,6 +21,10 @@ export function createOrderController(pool) {
       const page = pagination(req.query)
       const result = await listOrders(pool, page, { customerId: req.session.usuario.id })
       paged(res, result.rows, result.total, page)
+    },
+    async getOrder(req, res) {
+      if (!z.uuid().safeParse(req.params.id).success) throw new HttpError(404, 'NAO_ENCONTRADO', 'Pedido não encontrado.')
+      res.json({ data: await getOrderFor(pool, req.params.id, req.session) })
     },
     async cancelOrder(req, res) {
       if (!z.uuid().safeParse(req.params.id).success) throw new HttpError(404, 'NAO_ENCONTRADO', 'Pedido não encontrado.')

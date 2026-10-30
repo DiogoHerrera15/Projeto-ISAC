@@ -303,6 +303,30 @@ export const demoApi = {
       .map(pedidoCompleto)
   },
 
+  // Mesmas regras do backend: vendedora vê só os itens da sua loja.
+  async obterPedido(id) {
+    await espera(100)
+    const s = usuarioAtual()
+    const base = db()
+    const p = base.pedidos.find((x) => x.id === id)
+    if (!p) return null
+    const pedido = pedidoCompleto(p)
+    if (p.cliente_id === s.id) return { ...pedido, visao: 'cliente' }
+    if (ehAdmin()) return { ...pedido, visao: 'admin' }
+    const loja = base.lojas.find((l) => l.vendedor_id === s.id)
+    const itens = loja ? pedido.itens.filter((i) => i.loja_id === loja.id) : []
+    if (!itens.length) return null
+    const soma = (campo) => centavos(itens.reduce((t, i) => t + i[campo], 0))
+    return {
+      ...pedido,
+      itens,
+      valor_total: soma('subtotal'),
+      comissao_isac: soma('valor_comissao'),
+      valor_vendedores: soma('valor_vendedor'),
+      visao: 'vendedor',
+    }
+  },
+
   async cancelarPedido(pedidoId) {
     await espera()
     const s = usuarioAtual()

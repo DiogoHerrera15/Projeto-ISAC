@@ -237,6 +237,17 @@ export const backendApi = {
     return pedidos.map(normalizarPedido)
   },
 
+  // visao: 'cliente', 'vendedor' (só os itens da própria loja) ou 'admin'.
+  async obterPedido(id) {
+    try {
+      const { data } = await requisicao('GET', `/pedidos/${id}`)
+      return { ...normalizarPedido(data), visao: data.visao }
+    } catch (e) {
+      if (e.status === 404) return null
+      throw e
+    }
+  },
+
   async cancelarPedido(pedidoId) {
     await requisicao('POST', `/pedidos/${pedidoId}/cancelamento`, { corpo: {} })
   },
