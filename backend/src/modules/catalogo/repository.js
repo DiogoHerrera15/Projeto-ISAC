@@ -42,6 +42,15 @@ export async function listStores(db, { limit, offset }) {
   return { rows: result.rows, total: count.rows[0].total }
 }
 
+export async function fetchStore(db, id) {
+  const { rows } = await db.query(
+    `select l.id, l.nome, l.descricao, l.ativa, l.criado_em, l.vendedor_id,
+     (select count(*)::int from produtos p where p.loja_id = l.id and p.ativo = true) as total_produtos
+     from lojas l where l.id = $1`, [id],
+  )
+  return rows[0] || null
+}
+
 export async function listCategories(db) {
   const { rows } = await db.query('select id, nome from categorias order by ordem, nome')
   return rows

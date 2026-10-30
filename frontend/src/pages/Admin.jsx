@@ -265,7 +265,7 @@ function Lojas() {
           {lojas.map((l) => (
             <tr key={l.id} className="border-b border-linha">
               <td className="py-3">
-                <Link to={`/produtos?loja=${l.id}`} className="font-bold hover:underline">
+                <Link to={`/lojas/${l.id}`} className="font-bold hover:underline">
                   {l.nome}
                 </Link>
                 <span className="block text-sm text-tinta-suave">desde {formatarDataHora(l.criado_em).split(' ')[0]}</span>

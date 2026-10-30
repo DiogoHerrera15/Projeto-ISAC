@@ -1,17 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { api } from '../services/api'
-import { mensagemDeErro } from '../lib/format'
+import { ORDENS_PRODUTOS as ORDENS, mensagemDeErro } from '../lib/format'
 import ProdutoCard from '../components/ProdutoCard'
-import { Aviso, Botao, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
-
-// A ordenação é feita por quem fornece os dados (backend ou demo).
-const ORDENS = {
-  recentes: 'Mais recentes',
-  menor: 'Menor preço',
-  maior: 'Maior preço',
-  nome: 'Nome (A–Z)',
-}
+import { Aviso, Botao, BotaoLink, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
 
 export default function Catalogo() {
   const [params, setParams] = useSearchParams()
@@ -63,7 +55,16 @@ export default function Catalogo() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      <TituloPagina titulo={lojaAtual ? lojaAtual.nome : 'Produtos'}>
+      <TituloPagina
+        titulo={lojaAtual ? lojaAtual.nome : 'Produtos'}
+        acoes={
+          lojaAtual && (
+            <BotaoLink to={`/lojas/${lojaAtual.id}`} variante="secundario">
+              Ver página da loja
+            </BotaoLink>
+          )
+        }
+      >
         {lojaAtual?.descricao || 'Tudo o que as lojas da comunidade estão vendendo agora.'}
       </TituloPagina>
 

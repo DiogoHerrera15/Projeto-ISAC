@@ -184,6 +184,15 @@ export const backendApi = {
     return listarTudo('/lojas')
   },
 
+  async obterLoja(id) {
+    try {
+      return (await requisicao('GET', `/lojas/${id}`)).data
+    } catch (e) {
+      if (e.status === 404) return null
+      throw e
+    }
+  },
+
   async obterTaxa() {
     return num((await requisicao('GET', '/configuracoes/comissao')).data.percentual_comissao)
   },

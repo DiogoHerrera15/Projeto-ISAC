@@ -195,6 +195,15 @@ export const demoApi = {
       .map(({ id, nome, descricao }) => ({ id, nome, descricao }))
   },
 
+  async obterLoja(id) {
+    await espera(100)
+    const l = lojaPorId(id)
+    const s = sessao()
+    if (!l || !(l.ativa || l.vendedor_id === s?.id || ehAdmin())) return null
+    const { vendedor_id, ...loja } = copia(l)
+    return { ...loja, total_produtos: db().produtos.filter((p) => p.loja_id === id && p.ativo).length }
+  },
+
   async obterTaxa() {
     return db().configuracoes.percentual_comissao
   },

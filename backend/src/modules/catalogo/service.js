@@ -16,6 +16,15 @@ export async function getVisibleProduct(db, id, session) {
   return publicProduct(product)
 }
 
+// Loja fechada só aparece para a própria vendedora e para a administração, como os produtos.
+export async function getVisibleStore(db, id, session) {
+  const store = await repository.fetchStore(db, id)
+  const visible = store && (store.ativa || store.vendedor_id === session?.usuario.id || session?.perfil.administrador)
+  if (!visible) throw new HttpError(404, 'NAO_ENCONTRADO', 'Loja não encontrada.')
+  const { vendedor_id, ...publicStore } = store
+  return publicStore
+}
+
 export async function listProducts(db, filters) {
   const result = await repository.listProducts(db, filters)
   return { ...result, rows: result.rows.map(publicProduct) }

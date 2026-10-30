@@ -33,6 +33,11 @@ export function createCatalogController(pool) {
     async listCategories(_req, res) {
       res.json({ data: await service.listCategories(pool) })
     },
+    async getStore(req, res) {
+      if (!z.uuid().safeParse(req.params.id).success) throw new HttpError(404, 'NAO_ENCONTRADO', 'Loja não encontrada.')
+      const session = await loadSession(req, pool)
+      res.json({ data: await service.getVisibleStore(pool, req.params.id, session) })
+    },
     async getCommission(_req, res) {
       res.json({ data: await service.getCommission(pool) })
     },

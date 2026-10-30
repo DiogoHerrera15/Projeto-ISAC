@@ -84,7 +84,7 @@ export default function Produto() {
         {produto.loja && (
           <>
             {' / '}
-            <Link to={`/produtos?loja=${produto.loja.id}`} className="hover:underline">{produto.loja.nome}</Link>
+            <Link to={`/lojas/${produto.loja.id}`} className="hover:underline">{produto.loja.nome}</Link>
           </>
         )}
       </nav>
@@ -94,7 +94,7 @@ export default function Produto() {
         </div>
         <div>
           {produto.loja && (
-            <Link to={`/produtos?loja=${produto.loja.id}`} className="font-bold text-mar hover:underline">
+            <Link to={`/lojas/${produto.loja.id}`} className="font-bold text-mar hover:underline">
               {produto.loja.nome}
             </Link>
           )}

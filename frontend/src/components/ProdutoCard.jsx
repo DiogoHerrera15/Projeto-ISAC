@@ -36,7 +36,11 @@ export default function ProdutoCard({ produto }) {
         </Link>
       </h3>
       <p className="text-tinta-suave text-sm">
-        {produto.loja?.nome}
+        {produto.loja && (
+          <Link to={`/lojas/${produto.loja.id}`} className="hover:text-mar hover:underline underline-offset-2">
+            {produto.loja.nome}
+          </Link>
+        )}
         {!esgotado && produto.estoque <= 3 && (
           <span className="ml-2 font-bold text-alerta">Últimas {produto.estoque} unidades</span>
         )}

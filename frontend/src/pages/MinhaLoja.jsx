@@ -470,7 +470,7 @@ export default function MinhaLoja() {
       <TituloPagina
         titulo={loja.nome}
         acoes={
-          <BotaoLink to={`/produtos?loja=${loja.id}`} variante="secundario">
+          <BotaoLink to={`/lojas/${loja.id}`} variante="secundario">
             Ver como cliente
           </BotaoLink>
         }

@@ -129,6 +129,15 @@ export const supabaseApi = {
     )
   },
 
+  async obterLoja(id) {
+    const loja = checar(
+      await supabase.from('lojas').select('id, nome, descricao, ativa, criado_em, produtos(id, ativo)').eq('id', id).maybeSingle(),
+    )
+    if (!loja) return null
+    const { produtos, ...resto } = loja
+    return { ...resto, total_produtos: (produtos ?? []).filter((p) => p.ativo).length }
+  },
+
   async obterTaxa() {
     const d = checar(await supabase.from('configuracoes').select('percentual_comissao').eq('id', 1).single())
     return num(d.percentual_comissao)
