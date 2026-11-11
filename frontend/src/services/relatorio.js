@@ -1,4 +1,4 @@
-// Relatório de vendas calculado no navegador (modos demo e Supabase). Segue as
+// Relatório de vendas calculado no navegador para o modo demo. Segue as
 // regras do backend: só pedidos confirmados, contados pela data da confirmação
 // no fuso de Recife, com os períodos sem venda incluídos na série.
 const FUSO = 'America/Recife'

@@ -15,7 +15,7 @@
 - [Como executar o projeto](#como-executar-o-projeto)
 - [API do backend](#api-do-backend)
 - [Banco de dados](#banco-de-dados)
-- [Instalação do banco no Supabase](#instalação-do-banco-no-supabase)
+- [Modelo legado do Supabase](#modelo-legado-do-supabase)
 - [Organização do repositório](#organização-do-repositório)
 - [Escopo e próximas etapas](#escopo-e-próximas-etapas)
 - [Segurança e colaboração](#segurança-e-colaboração)
@@ -96,7 +96,7 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 | **Tailwind CSS** | Estilização responsiva para computadores e celulares. |
 | **Node.js 24 + Express 5** | API do backend (`/api/v1`): autenticação por sessão, catálogo, carrinho, pedidos, comissões e administração. |
 | **PostgreSQL 17** | Banco de dados do backend (migração em `backend/migrations`). |
-| **Supabase** | Alternativa opcional ao backend próprio (SQL em `database/`), mantida como legado. |
+| **SQL legado do Supabase** | Referência histórica em `database/`; não é executado pela aplicação atual. |
 | **Vercel** | Publicação do frontend na internet para apresentação e testes. |
 | **Git + GitHub** | Versionamento do projeto e colaboração entre integrantes. |
 
@@ -129,6 +129,7 @@ npm test
 ```bash
 cd frontend
 npm install
+npm test
 npm run dev                  # site em http://localhost:5173
 ```
 
@@ -156,7 +157,7 @@ Todas as rotas ficam em `/api/v1` e respondem JSON no formato `{ "data": ... }` 
 
 ## Banco de dados
 
-A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tabelas principais**. O backend próprio usa o mesmo modelo em `backend/migrations/001_modelo.sql` e acrescenta as tabelas `usuarios`, `sessoes` e `imagens`, porque a autenticação e o armazenamento de fotos deixam de depender do Supabase:
+A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tabelas principais**. As migrações em `backend/migrations/` são a fonte atual do esquema PostgreSQL; elas acrescentam `usuarios`, `sessoes` e `imagens` para a autenticação e o armazenamento de fotos pelo backend Node.js:
 
 | Tabela | Finalidade |
 |---|---|
@@ -168,9 +169,9 @@ A modelagem inicial foi construída para **PostgreSQL/Supabase**, com **sete tab
 | `pedido_itens` | Itens de cada pedido, com preços e comissões registrados. |
 | `configuracoes` | Percentual atual de comissão do ISAC. |
 
-O sistema também utiliza os recursos nativos do Supabase: **Authentication** para contas de usuários e **Storage** para fotos dos produtos.
+O esquema histórico em `database/` usava Supabase Authentication e Storage. A aplicação atual usa sessões e armazenamento de imagens pelo backend Node.js.
 
-A migration `backend/migrations/002_categorias.sql` acrescenta ao backend a tabela `categorias` (lista fixa, com ids legíveis como `doces` e `artesanato`) e a coluna opcional `produtos.categoria_id`. Para aplicá-la num banco já existente, rode `npm run db:migrate` de novo. O script do Supabase (`database/`) **não** tem categorias: no modo Supabase o filtro por categoria não aparece.
+A migration `backend/migrations/002_categorias.sql` acrescenta a tabela `categorias` (lista fixa, com ids legíveis como `doces` e `artesanato`) e a coluna opcional `produtos.categoria_id`. Para aplicá-la num banco já existente, rode `npm run db:migrate` de novo. O script histórico do Supabase em `database/` não inclui categorias.
 
 ### Regras importantes da modelagem
 
@@ -179,7 +180,7 @@ A migration `backend/migrations/002_categorias.sql` acrescenta ao backend a tabe
 - O valor e a comissão de cada item são preservados no momento da compra, mesmo se o preço do catálogo for alterado depois.
 - Os pedidos possuem os estados `pendente`, `confirmado` e `cancelado`.
 - O estoque é reservado na finalização e devolvido quando um pedido pendente é cancelado.
-- As permissões de acesso usam **Row Level Security (RLS)**.
+- A API Node.js verifica autenticação, propriedade e autorização antes de acessar os dados.
 - A confirmação simulada de pagamento é restrita ao administrador.
 
 ### Diagrama de relacionamentos
@@ -188,35 +189,9 @@ A migration `backend/migrations/002_categorias.sql` acrescenta ao backend a tabe
 
 > O arquivo de imagem deve estar na pasta `database/` para que o diagrama seja exibido corretamente no GitHub.
 
-## Instalação do banco no Supabase (opcional)
+## Modelo legado do Supabase
 
-Esta etapa só é necessária para usar o Supabase no lugar do backend próprio (`VITE_MODO=supabase` no frontend). Para o backend Node, siga [Como executar o projeto](#como-executar-o-projeto).
-
-Para criar um banco de testes a partir do código disponibilizado:
-
-1. Acesse [supabase.com](https://supabase.com/) e crie um projeto.
-2. No painel do projeto, abra **SQL Editor → New query**.
-3. Abra o arquivo [`database/ISAC_Market_banco_supabase.sql`](database/ISAC_Market_banco_supabase.sql) neste repositório.
-4. Copie todo o conteúdo para o editor do Supabase e execute com **Run**.
-5. Verifique a criação das **sete tabelas** em **Database → Tables**.
-6. Confira no **Storage** o bucket de imagens `isac-produtos`.
-7. Cadastre usuários de teste em **Authentication** e defina um administrador conforme as instruções do SQL/guia técnico.
-8. Teste o fluxo de cadastro de loja, produtos, carrinho, pedido e confirmação simulada.
-
-**Importante:** o script foi preparado para ser executado em **um projeto Supabase novo**. Não execute em um banco existente sem analisar previamente possíveis conflitos de tabelas, funções e políticas.
-
-A descrição detalhada do processo e os exemplos de operações estão no arquivo `GUIA_ISAC_Market.md`, fornecido junto ao banco. Se for disponibilizado no repositório, mantenha-o em `database/`.
-
-### Integração futura com React
-
-Quando o frontend estiver criado, ele poderá utilizar a biblioteca `@supabase/supabase-js` para consultar dados e chamar as funções públicas definidas no SQL, como:
-
-- `finalizar_pedido()` — gera o pedido a partir do carrinho do cliente autenticado.
-- `cancelar_pedido()` — cancela um pedido pendente permitido e devolve seu estoque.
-- `confirmar_pagamento_simulado(p_pedido_id)` — confirma um pedido, com permissão de administrador.
-- `pedidos_do_vendedor()` — permite ao vendedor consultar itens vendidos pela própria loja.
-
-As credenciais **públicas** de conexão serão configuradas no ambiente do frontend. Nunca inclua chaves secretas, senhas ou arquivos `.env` com credenciais privadas no GitHub.
+O arquivo [`database/ISAC_Market_banco_supabase.sql`](database/ISAC_Market_banco_supabase.sql) e o diagrama ER documentam a modelagem inicial. Eles não são usados pela aplicação atual. Para iniciar ou atualizar o banco do backend Node.js, siga [Como executar o projeto](#como-executar-o-projeto) e use `backend/migrations/`. Não execute o SQL legado sobre o banco atual.
 
 ## Organização do repositório
 
@@ -229,7 +204,7 @@ Projeto-ISAC/
 │   ├── tests/               # testes unitários e de integração
 │   └── compose.yaml         # PostgreSQL local (Docker)
 ├── frontend/                # site em React + Vite + Tailwind
-│   └── src/services/        # backendApi, supabaseApi e demoApi
+│   └── src/services/        # backendApi e demoApi
 ├── database/                # SQL e diagrama do modelo (versão Supabase)
 ├── .github/workflows/       # verificação automática (CI)
 └── README.md
@@ -264,10 +239,9 @@ Controles já implementados no backend:
 - Upload de fotos limitado a JPG, PNG e WebP (até 5 MB), com conferência do conteúdo real do arquivo.
 
 
-- O código SQL pode ser compartilhado pelo GitHub; ele **não contém, por si só, os dados reais de uma instância Supabase**.
-- O banco efetivamente utilizado pela aplicação fica hospedado no Supabase.
-- Para trabalhar com os **mesmos dados**, os integrantes devem utilizar o mesmo projeto Supabase, com acessos adequados.
-- Alterações importantes no banco devem ser discutidas e versionadas no repositório.
+- O arquivo SQL legado não contém dados reais de uma instância Supabase.
+- O banco PostgreSQL efetivamente usado pela aplicação depende do ambiente configurado em `DATABASE_URL`.
+- Alterações no esquema atual devem ser versionadas em `backend/migrations/`.
 - Não publique senhas, tokens privados ou chaves `service_role` no código-fonte.
 
 ---

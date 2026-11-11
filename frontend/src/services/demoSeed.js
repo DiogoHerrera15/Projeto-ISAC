@@ -1,5 +1,5 @@
 // Dados de exemplo do modo demonstração. Fictícios: servem só para apresentar
-// o fluxo do site sem precisar de um projeto Supabase configurado.
+// o fluxo do site sem precisar da API Node.js.
 
 export const SENHA_DEMO = 'isac123'
 

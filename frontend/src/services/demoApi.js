@@ -1,4 +1,4 @@
-// Modo demonstração: mesma interface do supabaseApi, mas os dados ficam no
+// Modo demonstração: mesma interface do backendApi, mas os dados ficam no
 // localStorage do navegador. Reproduz as regras do banco (comissão calculada
 // na finalização, estoque reservado, cancelamento devolve estoque, permissões
 // do administrador) para que o fluxo possa ser apresentado sem servidor.
