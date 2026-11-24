@@ -1,20 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Etiqueta from './Etiqueta'
 import ProdutoImagem from './ProdutoImagem'
 import { useCarrinho } from '../context/CartContext'
+import { mensagemDeErro } from '../lib/format'
 
 export default function ProdutoCard({ produto }) {
   const { adicionar, itens } = useCarrinho()
   const [adicionado, setAdicionado] = useState(false)
+  const [erro, setErro] = useState('')
   const noCarrinho = itens.find((i) => i.produto_id === produto.id)?.quantidade || 0
   const esgotado = produto.estoque <= 0
   const limite = noCarrinho >= produto.estoque
 
+  // O aviso "Adicionado" some sozinho; o temporizador é limpo se o card sair da tela.
+  useEffect(() => {
+    if (!adicionado) return undefined
+    const espera = setTimeout(() => setAdicionado(false), 1600)
+    return () => clearTimeout(espera)
+  }, [adicionado])
+
   async function aoAdicionar() {
-    await adicionar(produto, 1)
-    setAdicionado(true)
-    setTimeout(() => setAdicionado(false), 1600)
+    setErro('')
+    try {
+      await adicionar(produto, 1)
+      setAdicionado(true)
+    } catch (e) {
+      setErro(mensagemDeErro(e))
+    }
   }
 
   return (
@@ -61,6 +74,11 @@ export default function ProdutoCard({ produto }) {
             </>
           )}
         </button>
+        {erro && (
+          <p role="alert" className="mt-1 text-xs font-bold text-alerta">
+            {erro}
+          </p>
+        )}
       </div>
     </article>
   )

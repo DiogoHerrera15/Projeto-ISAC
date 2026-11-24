@@ -50,12 +50,23 @@ export function CartProvider({ children }) {
       if (usuarioId) {
         const visitante = lerVisitante()
         if (visitante.length) {
-          const atuais = await api.listarCarrinho(usuarioId)
-          for (const v of visitante) {
-            const existente = atuais.find((a) => a.produto_id === v.produto_id)
-            await api.definirQuantidade(usuarioId, v.produto_id, (existente?.quantidade || 0) + v.quantidade)
+          // Itens que não puderem ser levados por falha de rede/servidor ficam guardados
+          // para a próxima entrada; os recusados pela API (produto indisponível etc.) são descartados.
+          const restantes = []
+          try {
+            const atuais = await api.listarCarrinho(usuarioId)
+            for (const v of visitante) {
+              try {
+                const existente = atuais.find((a) => a.produto_id === v.produto_id)
+                await api.definirQuantidade(usuarioId, v.produto_id, Math.min((existente?.quantidade || 0) + v.quantidade, 999))
+              } catch (e) {
+                if (!(e?.status >= 400 && e.status < 500)) restantes.push(v)
+              }
+            }
+          } catch {
+            restantes.push(...visitante)
           }
-          gravarVisitante([])
+          gravarVisitante(restantes)
         }
       }
       await recarregar()
@@ -105,8 +116,9 @@ export function CartProvider({ children }) {
 
   const resumo = useMemo(() => {
     const quantidade = itens.reduce((s, i) => s + i.quantidade, 0)
-    const total = itens.reduce((s, i) => s + (i.produto?.preco || 0) * i.quantidade, 0)
-    return { quantidade, total: Math.round(total * 100) / 100 }
+    // Soma em centavos inteiros para não acumular erro de ponto flutuante.
+    const centavos = itens.reduce((s, i) => s + Math.round((i.produto?.preco || 0) * 100) * i.quantidade, 0)
+    return { quantidade, total: centavos / 100 }
   }, [itens])
 
   const valor = { itens, carregando, ...resumo, adicionar, definirQuantidade, recarregar }

@@ -237,8 +237,13 @@ Controles já implementados no backend:
 - Validação de todas as entradas e consultas SQL parametrizadas.
 - Checkout **idempotente** e com bloqueio de estoque, para evitar pedidos duplicados e vendas acima do estoque.
 - Upload de fotos limitado a JPG, PNG e WebP (até 5 MB), com conferência do conteúdo real do arquivo.
+- Limite de tentativas de login que só conta os erros (logins corretos não bloqueiam quem divide o mesmo IP).
+- Em produção (`NODE_ENV=production`) a API também envia `Strict-Transport-Security` e uma política de conteúdo (CSP) restritiva.
+- Limpeza automática a cada 6 horas de sessões vencidas e fotos órfãs (também disponíveis em `npm run sessions:clean` e `npm run images:clean`).
 
+Observações:
 
+- Nos modos de demonstração e backend as senhas de exemplo são diferentes: `isac123` (demo, no navegador) e `isac1234` (banco local, após o seed).
 - O arquivo SQL legado não contém dados reais de uma instância Supabase.
 - O banco PostgreSQL efetivamente usado pela aplicação depende do ambiente configurado em `DATABASE_URL`.
 - Alterações no esquema atual devem ser versionadas em `backend/migrations/`.

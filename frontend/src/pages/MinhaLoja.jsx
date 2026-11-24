@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../services/api'
-import { codigoPedido, dividirValor, formatarDataHora, formatarMoeda, mensagemDeErro } from '../lib/format'
+import { codigoPedido, dividirValor, formatarDataHora, formatarMoeda, lerPreco, mensagemDeErro } from '../lib/format'
 import ProdutoImagem from '../components/ProdutoImagem'
 import StatusPedido from '../components/StatusPedido'
 import { Abas, Aviso, Botao, BotaoLink, Campo, Carregando, Selecao, TituloPagina, Vazio } from '../components/ui'
@@ -90,8 +90,7 @@ function FormProduto({ loja, produto, taxa, aoSalvar, aoCancelar }) {
   const mudar = (campo) => (e) =>
     setDados((d) => ({ ...d, [campo]: e.target.type === 'checkbox' ? e.target.checked : e.target.value }))
 
-  const precoTexto = String(dados.preco).trim()
-  const preco = Number(precoTexto.includes(',') ? precoTexto.replace(/\./g, '').replace(',', '.') : precoTexto)
+  const preco = lerPreco(dados.preco)
   const { vendedor } = dividirValor(preco || 0, taxa)
 
   function escolherFoto(e) {
@@ -250,9 +249,18 @@ function AbaProdutos({ loja, taxa }) {
   const [produtos, setProdutos] = useState(null)
   const [editando, setEditando] = useState(null) // null | 'novo' | produto
   const [aviso, setAviso] = useState('')
+  const [erro, setErro] = useState('')
 
   const carregar = useCallback(() => {
-    api.produtosDaLoja(loja.id).then(setProdutos).catch(() => setProdutos([]))
+    setErro('')
+    api
+      .produtosDaLoja(loja.id)
+      .then(setProdutos)
+      .catch((e) => {
+        // Erro ao listar não pode parecer "loja vazia".
+        setErro(mensagemDeErro(e))
+        setProdutos((atual) => atual ?? [])
+      })
   }, [loja.id])
   useEffect(carregar, [carregar])
 
@@ -284,7 +292,15 @@ function AbaProdutos({ loja, taxa }) {
         </Botao>
       </div>
       {aviso && <Aviso tipo="ok" className="mb-6">{aviso}</Aviso>}
-      {produtos.length === 0 ? (
+      {erro && (
+        <Aviso tipo="erro" className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <span>{erro}</span>
+          <Botao tamanho="p" variante="secundario" onClick={carregar}>
+            Tentar de novo
+          </Botao>
+        </Aviso>
+      )}
+      {produtos.length === 0 && erro ? null : produtos.length === 0 ? (
         <Vazio titulo="Sua loja ainda está vazia" acao={<Botao onClick={() => setEditando('novo')}>Publicar primeiro produto</Botao>}>
           Comece pelo produto que mais vende. Uma boa foto ajuda muito.
         </Vazio>
@@ -451,12 +467,21 @@ function AbaDados({ loja, aoAtualizar }) {
 // ---------------------------------------------------------------------------
 export default function MinhaLoja() {
   const { usuario } = useAuth()
-  const [loja, setLoja] = useState(undefined)
+  const [loja, setLoja] = useState(undefined) // undefined = carregando, null = ainda não tem loja
+  const [erroLoja, setErroLoja] = useState('')
   const [taxa, setTaxa] = useState(5)
   const [aba, setAba] = useState('produtos')
 
   const carregar = useCallback(() => {
-    api.minhaLoja(usuario.id).then(setLoja).catch(() => setLoja(null))
+    setErroLoja('')
+    api
+      .minhaLoja(usuario.id)
+      .then(setLoja)
+      .catch((e) => {
+        // Falha de rede/servidor não significa "sem loja": mostra o erro em vez do formulário de abrir loja.
+        setErroLoja(mensagemDeErro(e))
+        setLoja((atual) => (atual === undefined ? null : atual))
+      })
   }, [usuario.id])
 
   useEffect(() => {
@@ -465,6 +490,20 @@ export default function MinhaLoja() {
   }, [carregar])
 
   if (loja === undefined) return <Carregando />
+  if (erroLoja && !loja)
+    return (
+      <div className="mx-auto max-w-xl px-4 py-16 space-y-4">
+        <Aviso tipo="erro">{erroLoja}</Aviso>
+        <Botao
+          onClick={() => {
+            setLoja(undefined)
+            carregar()
+          }}
+        >
+          Tentar de novo
+        </Botao>
+      </div>
+    )
   if (!loja) return <AbrirLoja taxa={taxa} aoCriar={carregar} />
 
   return (

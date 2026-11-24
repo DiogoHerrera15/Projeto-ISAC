@@ -3,9 +3,7 @@ import { formatarDinheiro, parseDinheiro } from '../../shared/dinheiro.js'
 import { ownStore } from '../lojas/service.js'
 import * as repository from './repository.js'
 
-export async function getOrder(db, id, includeCustomer = false) {
-  const row = await repository.fetchOrder(db, id)
-  if (!row) return null
+function presentOrder(row, includeCustomer) {
   const { cliente_nome, cliente_telefone, ...order } = row
   return {
     ...order,
@@ -13,9 +11,17 @@ export async function getOrder(db, id, includeCustomer = false) {
   }
 }
 
+export async function getOrder(db, id, includeCustomer = false) {
+  const row = await repository.fetchOrder(db, id)
+  return row ? presentOrder(row, includeCustomer) : null
+}
+
 export async function listOrders(db, page, { customerId = null, admin = false } = {}) {
   const result = await repository.listOrderIds(db, customerId, page)
-  const rows = await Promise.all(result.ids.map((id) => getOrder(db, id, admin)))
+  const fetched = await repository.fetchOrders(db, result.ids)
+  const byId = new Map(fetched.map((row) => [row.id, row]))
+  // Mantém a ordem da página (mais recentes primeiro); um pedido que sumiu no meio do caminho é ignorado.
+  const rows = result.ids.filter((id) => byId.has(id)).map((id) => presentOrder(byId.get(id), admin))
   return { rows, total: result.total }
 }
 

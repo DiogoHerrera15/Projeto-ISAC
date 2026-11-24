@@ -108,7 +108,7 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 - O frontend foi ligado ao backend há pouco tempo; o fluxo completo está sendo validado em um ambiente remoto (Codespaces), onde o endereço do site precisa coincidir com o `APP_ORIGIN`.
 - Não há recuperação nem troca de senha, nem confirmação de e-mail.
 - As fotos ficam em disco local; em hospedagem seria preciso armazenamento externo.
-- O frontend ainda não tem testes automatizados.
+- Os testes automatizados do frontend cobrem a camada de serviços e o cálculo de valores; as telas (componentes React) ainda não têm testes.
 - As categorias são uma lista fixa (migration 002); ainda não há tela para a administração criá-las ou editá-las.
 - O layout no celular ainda não foi revisado tela a tela depois das novidades.
 - O backend ainda não foi publicado em hospedagem.

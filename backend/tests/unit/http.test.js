@@ -50,4 +50,16 @@ test('respostas levam cabeçalhos de segurança', async (t) => {
   assert.equal(res.headers['x-frame-options'], 'DENY')
   assert.equal(res.headers['referrer-policy'], 'same-origin')
   assert.equal(res.headers['x-powered-by'], undefined)
+  assert.equal(res.headers['content-security-policy'], undefined)
+  assert.equal(res.headers['strict-transport-security'], undefined)
+})
+
+test('em produção a resposta também leva HSTS e política de conteúdo', async (t) => {
+  const uploadDir = await mkdtemp(join(tmpdir(), 'isac-http-'))
+  t.after(() => rm(uploadDir, { recursive: true, force: true }))
+  const app = createApp({ pool: {}, config: { appOrigin: 'http://localhost:5173', uploadDir, production: true } })
+  const res = await request(app).get('/api/v1/health').expect(200)
+  assert.match(res.headers['strict-transport-security'], /max-age=\d+/)
+  assert.match(res.headers['content-security-policy'], /default-src 'self'/)
+  assert.match(res.headers['content-security-policy'], /frame-ancestors 'none'/)
 })

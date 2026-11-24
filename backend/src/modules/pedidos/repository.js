@@ -12,6 +12,27 @@ export async function fetchOrder(db, orderId) {
   return { ...result.rows[0], itens: items.rows }
 }
 
+// Versão em lote de fetchOrder: 2 consultas para qualquer quantidade de pedidos
+// (antes eram 2 por pedido listado).
+export async function fetchOrders(db, orderIds) {
+  if (!orderIds.length) return []
+  const orders = await db.query(
+    `select p.*, pf.nome as cliente_nome, pf.telefone as cliente_telefone
+     from pedidos p join perfis pf on pf.id = p.cliente_id where p.id = any($1::uuid[])`, [orderIds],
+  )
+  const items = await db.query(
+    `select i.*, json_build_object('id', l.id, 'nome', l.nome) as loja
+     from pedido_itens i join lojas l on l.id = i.loja_id
+     where i.pedido_id = any($1::uuid[]) order by i.id`, [orderIds],
+  )
+  const byOrder = new Map()
+  for (const item of items.rows) {
+    if (!byOrder.has(item.pedido_id)) byOrder.set(item.pedido_id, [])
+    byOrder.get(item.pedido_id).push(item)
+  }
+  return orders.rows.map((row) => ({ ...row, itens: byOrder.get(row.id) ?? [] }))
+}
+
 export async function listOrderIds(db, customerId, { limit, offset }) {
   const where = customerId ? 'where cliente_id = $1' : ''
   const args = customerId ? [customerId] : []

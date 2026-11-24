@@ -45,6 +45,10 @@ export async function logout(db, token) {
   await repository.deleteSession(db, tokenHash(token))
 }
 
+export async function cleanExpiredSessions(db) {
+  return repository.deleteExpiredSessions(db)
+}
+
 export async function getSession(db, token) {
   const row = await repository.findSession(db, tokenHash(token))
   if (!row) return null

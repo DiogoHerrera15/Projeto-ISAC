@@ -41,3 +41,8 @@ export async function findSession(db, hash) {
 export async function deleteSession(db, hash) {
   await db.query('delete from sessoes where token_hash = $1', [hash])
 }
+
+export async function deleteExpiredSessions(db) {
+  const { rowCount } = await db.query('delete from sessoes where expira_em <= now()')
+  return rowCount
+}

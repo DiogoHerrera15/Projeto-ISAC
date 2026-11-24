@@ -14,12 +14,14 @@ export async function migrate(pool, { schema = 'public', directory = migrationDi
     await client.query('create table if not exists schema_migrations (nome text primary key, aplicado_em timestamptz not null default now())')
     const { rows } = await client.query('select nome from schema_migrations')
     const applied = new Set(rows.map((row) => row.nome))
+    const aplicadas = []
     for (const file of files) {
       if (applied.has(file)) continue
       const sql = await readFile(join(directory, file), 'utf8')
       await client.query(sql)
       await client.query('insert into schema_migrations(nome) values ($1)', [file])
+      aplicadas.push(file)
     }
-    return files.length
+    return { total: files.length, aplicadas }
   })
 }

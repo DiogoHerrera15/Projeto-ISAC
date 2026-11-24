@@ -47,7 +47,13 @@ export default function Carrinho() {
   if (pedidoId) return <PedidoRegistrado pedidoId={pedidoId} />
 
   const precisaTelefone = usuario && perfil && !perfil.telefone
-  const { comissao, vendedor } = dividirValor(total, taxa)
+  // O backend arredonda a comissão item a item; somamos igual para a estimativa bater com o pedido.
+  const comissaoCentavos = itens.reduce(
+    (soma, i) => soma + Math.round(dividirValor((i.produto?.preco || 0) * i.quantidade, taxa).comissao * 100),
+    0,
+  )
+  const comissao = comissaoCentavos / 100
+  const vendedor = (Math.round(total * 100) - comissaoCentavos) / 100
 
   // Agrupa os itens por loja: cada loja combina a entrega da sua parte.
   const porLoja = itens.reduce((grupos, item) => {

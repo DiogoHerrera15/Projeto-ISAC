@@ -2,7 +2,7 @@ import express from 'express'
 import { join } from 'node:path'
 import { errorHandler, HttpError } from './http/errors.js'
 import { requireSameOrigin } from './http/origin.js'
-import { securityHeaders } from './http/headers.js'
+import { createSecurityHeaders } from './http/headers.js'
 import { registerAuthRoutes } from './modules/auth/routes.js'
 import { registerProfileRoutes } from './modules/perfis/routes.js'
 import { registerCatalogRoutes } from './modules/catalogo/routes.js'
@@ -18,7 +18,7 @@ export function createApp({ pool, storage, config } = {}) {
   const app = express()
   app.disable('x-powered-by')
   if (config.trustProxy) app.set('trust proxy', config.trustProxy)
-  app.use(securityHeaders)
+  app.use(createSecurityHeaders({ production: Boolean(config.production) }))
   app.locals.pool = pool
   app.locals.storage = storage
   app.locals.config = config

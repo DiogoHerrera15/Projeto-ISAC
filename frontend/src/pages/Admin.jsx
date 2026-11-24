@@ -179,6 +179,7 @@ function Interruptor({ ligado, aoMudar, rotulo }) {
 function Lojas() {
   const [lojas, setLojas] = useState(null)
   const [erro, setErro] = useState('')
+  const [aviso, setAviso] = useState('') // falha ao abrir/fechar uma loja (não esconde a tabela)
   const carregar = useCallback(() => api.todasLojas().then(setLojas).catch((e) => setErro(mensagemDeErro(e))), [])
   useEffect(() => {
     carregar()
@@ -190,6 +191,7 @@ function Lojas() {
 
   return (
     <div className="overflow-x-auto">
+      {aviso && <Aviso tipo="erro" className="mb-4">{aviso}</Aviso>}
       <table className="w-full text-left min-w-[640px]">
         <thead className="text-sm text-tinta-suave border-b-2 border-linha">
           <tr>
@@ -218,7 +220,12 @@ function Lojas() {
                   ligado={l.ativa}
                   rotulo={`Loja ${l.nome} aberta`}
                   aoMudar={async (v) => {
-                    await api.atualizarLoja(l.id, { ativa: v })
+                    setAviso('')
+                    try {
+                      await api.atualizarLoja(l.id, { ativa: v })
+                    } catch (e) {
+                      setAviso(mensagemDeErro(e))
+                    }
                     await carregar()
                   }}
                 />
@@ -234,6 +241,7 @@ function Lojas() {
 function Produtos() {
   const [produtos, setProdutos] = useState(null)
   const [erro, setErro] = useState('')
+  const [aviso, setAviso] = useState('') // falha ao pausar/reativar um produto (não esconde a tabela)
   const carregar = useCallback(() => api.todosProdutos().then(setProdutos).catch((e) => setErro(mensagemDeErro(e))), [])
   useEffect(() => {
     carregar()
@@ -245,6 +253,7 @@ function Produtos() {
 
   return (
     <div className="overflow-x-auto">
+      {aviso && <Aviso tipo="erro" className="mb-4">{aviso}</Aviso>}
       <table className="w-full text-left min-w-[640px]">
         <thead className="text-sm text-tinta-suave border-b-2 border-linha">
           <tr>
@@ -274,7 +283,14 @@ function Produtos() {
                   ligado={p.ativo}
                   rotulo={`${p.nome} no catálogo`}
                   aoMudar={async (v) => {
-                    await api.atualizarProduto(p.id, { ativo: v })
+                    setAviso('')
+                    try {
+                      await api.atualizarProduto(p.id, { ativo: v })
+                    } catch (e) {
+                      // Ex.: o vendedor editou o produto no meio tempo (versão desatualizada);
+                      // recarregar traz a versão nova e a pessoa pode tentar de novo.
+                      setAviso(mensagemDeErro(e))
+                    }
                     await carregar()
                   }}
                 />
