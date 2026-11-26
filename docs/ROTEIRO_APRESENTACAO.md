@@ -109,6 +109,7 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 - O frontend foi ligado ao backend há pouco tempo; o fluxo completo está sendo validado em um ambiente remoto (Codespaces), onde o endereço do site precisa coincidir com o `APP_ORIGIN`.
 - Não há confirmação de e-mail no cadastro. A recuperação de senha só envia e-mail de verdade com um servidor SMTP configurado (`SMTP_URL`); sem ele, o link aparece no terminal do backend.
 - As fotos ficam em disco local; em hospedagem seria preciso armazenamento externo.
+- O aplicativo iPhone (Capacitor) foi preparado, mas só roda com o Xcode instalado; confira o passo a passo no README antes de apresentá-lo.
 - Os testes automatizados do frontend cobrem a camada de serviços e o cálculo de valores; as telas (componentes React) ainda não têm testes.
 - As categorias são uma lista fixa (migration 002); ainda não há tela para a administração criá-las ou editá-las.
 - O layout no celular ainda não foi revisado tela a tela depois das novidades.

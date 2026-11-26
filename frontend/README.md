@@ -61,6 +61,7 @@ A faixa amarela no topo tem o botão **Restaurar dados de exemplo**.
 | `/pedidos/:id` | Cliente, vendedora, administrador | Detalhe do pedido: itens, status, datas e divisão entre loja e ISAC (a vendedora vê só os itens dela) |
 | `/conta` | Logado | Nome, telefone e troca de senha (as lojas usam o telefone para combinar entrega) |
 | `/minha-loja` | Vendedor | Abre a loja, cadastra produtos com foto e categoria, consulta os itens vendidos pela sua loja |
+| `/servidor` | Aplicativo | Escolhe o endereço do backend (simulador: `http://localhost:3001`; iPhone: IP do Mac) |
 | `/admin` | Administrador | Relatório de vendas confirmadas por período e por loja (gráfico, tabela e CSV), pedidos com confirmação simulada, lojas, produtos e taxa |
 
 Quem não entrou na conta pode montar o carrinho; ao entrar, os itens vão para a
@@ -86,6 +87,10 @@ frontend/
 ```
 
 Todas as páginas usam `api` de `services/api.js`. A integração com a API Node.js fica em `backendApi.js`; o modo demonstração é mantido em `demoApi.js`. Qualquer valor de `VITE_MODO` diferente de `backend` ou `demo` causa erro explícito.
+
+## Aplicativo iPhone
+
+Veja a seção "Aplicativo para iPhone (Capacitor)" do README principal. Scripts: `npm run app:build` (gera o site e sincroniza o projeto iOS) e `npm run app:ios` (abre no Xcode). O código que distingue site de app está em `src/services/ambiente.js`.
 
 ## Publicar na Vercel
 

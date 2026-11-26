@@ -17,6 +17,7 @@ import PedidoDetalhe from './pages/PedidoDetalhe'
 import Conta from './pages/Conta'
 import MinhaLoja from './pages/MinhaLoja'
 import Admin from './pages/Admin'
+import Servidor from './pages/Servidor'
 import NaoEncontrada from './pages/NaoEncontrada'
 
 export default function App() {
@@ -40,6 +41,7 @@ export default function App() {
               <Route path="conta" element={<Protegida><Conta /></Protegida>} />
               <Route path="minha-loja" element={<Protegida><MinhaLoja /></Protegida>} />
               <Route path="admin" element={<Protegida admin><Admin /></Protegida>} />
+              <Route path="servidor" element={<Servidor />} />
               <Route path="*" element={<NaoEncontrada />} />
             </Route>
           </Routes>

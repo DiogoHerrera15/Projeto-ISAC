@@ -27,7 +27,7 @@ export async function criarCenario(t) {
   const uploadDir = await mkdtemp(join(tmpdir(), 'isac-images-'))
   t.after(() => rm(uploadDir, { recursive: true, force: true }))
   const config = {
-    appOrigin: 'http://localhost:5173', sessionTtlSeconds: 604800, resetTtlSeconds: 3600, production: false, uploadDir,
+    appOrigin: 'http://localhost:5173', sessionTtlSeconds: 604800, resetTtlSeconds: 3600, appNativeOrigins: ['capacitor://localhost'], production: false, uploadDir,
   }
   // Em vez de enviar e-mail de verdade, guarda o que seria enviado para os testes lerem (ex.: o link de recuperação).
   const mailer = { enviados: [], async send(mensagem) { this.enviados.push(mensagem) } }

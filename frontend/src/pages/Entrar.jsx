@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { modoDemo } from '../services/api'
+import { ehApp } from '../services/ambiente'
 import { CONTAS_DEMO, SENHA_DEMO } from '../services/demoSeed'
 import { mensagemDeErro } from '../lib/format'
 import { Aviso, Botao, Campo } from '../components/ui'
@@ -63,6 +64,15 @@ export default function Entrar() {
           Entrar
         </Botao>
       </form>
+
+      {ehApp && (
+        <p className="mt-10 border-t-2 border-linha pt-6 text-sm text-tinta-suave">
+          Sem conexão com o servidor?{' '}
+          <Link to="/servidor" className="font-bold text-mar underline underline-offset-4">
+            Configurar servidor
+          </Link>
+        </p>
+      )}
 
       {modoDemo && (
         <div className="mt-10 border-t-2 border-linha pt-6">

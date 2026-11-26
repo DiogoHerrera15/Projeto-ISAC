@@ -5,7 +5,7 @@
 // As regras de negócio ficam no backend; aqui só traduzimos as respostas para
 // o formato que as páginas já usam.
 
-const BASE = (import.meta.env?.VITE_API_URL || '/api/v1').replace(/\/$/, '')
+import { carregarToken, ehApp, guardarToken, tokenAtual, urlDaApi, urlDaImagem } from './ambiente'
 
 export class ErroApi extends Error {
   constructor(status, codigo, mensagem, detalhes) {
@@ -39,11 +39,13 @@ function definirUsuario(usuario) {
 }
 
 async function requisicao(metodo, caminho, { corpo, consulta, cabecalhos, formulario } = {}) {
-  const url = new URL(`${BASE}${caminho}`, window.location.origin)
+  const url = new URL(`${urlDaApi()}${caminho}`, window.location.origin)
   for (const [chave, valor] of Object.entries(consulta ?? {})) {
     if (valor !== undefined && valor !== null && valor !== '') url.searchParams.set(chave, valor)
   }
-  const headers = { 'X-ISAC-Client': 'web', ...cabecalhos }
+  // O app se identifica como 'app' e manda o token; o site usa o cookie de sessão.
+  const headers = { 'X-ISAC-Client': ehApp ? 'app' : 'web', ...cabecalhos }
+  if (tokenAtual()) headers.Authorization = `Bearer ${tokenAtual()}`
   let body
   if (formulario) {
     body = formulario
@@ -57,7 +59,10 @@ async function requisicao(metodo, caminho, { corpo, consulta, cabecalhos, formul
   if (!resposta.ok) {
     const e = json?.error
     // Sessão expirada em outra aba ou no servidor: a tela volta ao estado "deslogado".
-    if (resposta.status === 401 && e?.code === 'NAO_AUTENTICADO' && usuarioAtual) definirUsuario(null)
+    if (resposta.status === 401 && e?.code === 'NAO_AUTENTICADO' && usuarioAtual) {
+      await guardarToken(null)
+      definirUsuario(null)
+    }
     throw new ErroApi(resposta.status, e?.code, e?.message || 'Algo deu errado. Tente novamente.', e?.details)
   }
   return json
@@ -75,7 +80,7 @@ async function listarTudo(caminho, consulta = {}) {
 // ---------- Normalização ----------
 // O backend devolve valores em dinheiro como texto ("35.00"); as telas usam número.
 function normalizarProduto(p) {
-  return p ? { ...p, preco: num(p.preco) } : null
+  return p ? { ...p, preco: num(p.preco), foto_url: urlDaImagem(p.foto_url) } : null
 }
 
 function normalizarPedido(p) {
@@ -125,6 +130,7 @@ export const backendApi = {
 
   // ---------- Autenticação e perfil ----------
   async obterUsuario() {
+    await carregarToken() // no app, a sessão é o token guardado no aparelho
     const { data } = await requisicao('GET', '/auth/sessao')
     usuarioAtual = data ? { id: data.usuario.id, email: data.usuario.email } : null
     return usuarioAtual
@@ -139,18 +145,24 @@ export const backendApi = {
     const { data } = await requisicao('POST', '/auth/cadastro', {
       corpo: { nome, email, senha, telefone: telefone || null },
     })
+    await guardarToken(data.token)
     definirUsuario({ id: data.usuario.id, email: data.usuario.email })
     return { precisaConfirmarEmail: Boolean(data.precisaConfirmarEmail) }
   },
 
   async entrar({ email, senha }) {
     const { data } = await requisicao('POST', '/auth/login', { corpo: { email, senha } })
+    await guardarToken(data.token)
     definirUsuario({ id: data.usuario.id, email: data.usuario.email })
   },
 
   async sair() {
-    await requisicao('POST', '/auth/logout')
-    definirUsuario(null)
+    try {
+      await requisicao('POST', '/auth/logout')
+    } finally {
+      await guardarToken(null)
+      definirUsuario(null)
+    }
   },
 
   // Troca de senha de quem está logado; as outras sessões da conta são encerradas pelo servidor.

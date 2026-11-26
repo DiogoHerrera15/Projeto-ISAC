@@ -2,6 +2,7 @@ import express from 'express'
 import { join } from 'node:path'
 import { errorHandler, HttpError } from './http/errors.js'
 import { requireSameOrigin } from './http/origin.js'
+import { nativeCors } from './http/cors.js'
 import { createSecurityHeaders } from './http/headers.js'
 import { createMailer } from './mail/mailer.js'
 import { registerAuthRoutes } from './modules/auth/routes.js'
@@ -24,7 +25,9 @@ export function createApp({ pool, storage, config, mailer = createMailer(config 
   app.locals.storage = storage
   app.locals.config = config
   app.use(express.json({ limit: '64kb' }))
-  app.use('/api/v1', requireSameOrigin(config.appOrigins ?? config.appOrigin))
+  const nativeOrigins = config.appNativeOrigins ?? []
+  app.use('/api/v1', nativeCors(nativeOrigins))
+  app.use('/api/v1', requireSameOrigin(config.appOrigins ?? config.appOrigin, { nativeOrigins }))
   app.get('/api/v1/health', (_req, res) => res.json({ data: { status: 'ok' } }))
   registerAuthRoutes(app, pool, config, mailer)
   registerProfileRoutes(app, pool)

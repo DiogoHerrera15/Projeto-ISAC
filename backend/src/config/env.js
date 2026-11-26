@@ -12,6 +12,14 @@ export function readConfig(env = process.env) {
       throw new Error('APP_ORIGIN deve ser uma origem HTTP(S) exata')
     }
   })
+  // Origens do aplicativo instalado (Capacitor/iOS usa capacitor://localhost). Vazio = sem suporte a app.
+  const nativeRaw = env.APP_NATIVE_ORIGINS === undefined ? 'capacitor://localhost' : env.APP_NATIVE_ORIGINS
+  const appNativeOrigins = String(nativeRaw).split(',').map((item) => item.trim()).filter(Boolean).map((item) => {
+    if (!/^(capacitor|ionic|https?):\/\/[A-Za-z0-9.-]+(:\d+)?$/.test(item)) {
+      throw new Error('APP_NATIVE_ORIGINS deve listar origens exatas (ex.: capacitor://localhost)')
+    }
+    return item
+  })
   const port = Number(env.PORT || 3001)
   if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error('PORT inválida')
   const sessionTtlSeconds = Number(env.SESSION_TTL_SECONDS || 604800)
@@ -30,6 +38,7 @@ export function readConfig(env = process.env) {
     migrationDatabaseUrl: env.MIGRATION_DATABASE_URL || env.DATABASE_URL,
     appOrigin: appOrigins[0],
     appOrigins,
+    appNativeOrigins,
     trustProxy,
     port,
     sessionTtlSeconds,

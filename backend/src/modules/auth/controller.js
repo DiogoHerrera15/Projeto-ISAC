@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { validate, normalizePhone } from '../../http/validation.js'
-import { clearSessionCookie, loadSession, readSessionToken, setSessionCookie } from './sessions.js'
+import { clearSessionCookie, isAppClient, loadSession, readSessionToken, setSessionCookie } from './sessions.js'
 import * as service from './service.js'
 
 const newPassword = z.string().min(8).max(128)
@@ -31,14 +31,18 @@ export function createAuthController(pool, config, mailer) {
     async register(req, res) {
       const fields = validate(signupSchema, req.body)
       const result = await service.register(pool, { ...fields, telefone: normalizePhone(fields.telefone) }, config.sessionTtlSeconds)
-      setSessionCookie(res, result.token, config)
-      res.status(201).json({ data: { usuario: result.usuario, perfil: result.perfil, precisaConfirmarEmail: false } })
+      const data = { usuario: result.usuario, perfil: result.perfil, precisaConfirmarEmail: false }
+      if (isAppClient(req)) data.token = result.token // o app guarda o token; o site usa cookie
+      else setSessionCookie(res, result.token, config)
+      res.status(201).json({ data })
     },
     async login(req, res) {
       const fields = validate(loginSchema, req.body)
       const result = await service.login(pool, fields, config.sessionTtlSeconds)
-      setSessionCookie(res, result.token, config)
-      res.json({ data: { usuario: result.usuario, perfil: result.perfil } })
+      const data = { usuario: result.usuario, perfil: result.perfil }
+      if (isAppClient(req)) data.token = result.token
+      else setSessionCookie(res, result.token, config)
+      res.json({ data })
     },
     async getSession(req, res) {
       const session = await loadSession(req, pool)
@@ -47,7 +51,7 @@ export function createAuthController(pool, config, mailer) {
     async logout(req, res) {
       const token = readSessionToken(req)
       if (token) await service.logout(pool, token)
-      clearSessionCookie(res, config)
+      if (!isAppClient(req)) clearSessionCookie(res, config)
       res.status(204).end()
     },
     async changePassword(req, res) {

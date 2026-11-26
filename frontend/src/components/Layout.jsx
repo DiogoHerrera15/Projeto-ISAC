@@ -76,7 +76,7 @@ function Cabecalho() {
   )
 
   return (
-    <header className="bg-mar text-white sticky top-0 z-40">
+    <header className="bg-mar text-white sticky top-0 z-40 pt-[env(safe-area-inset-top)]">
       <div className="mx-auto max-w-6xl px-4 h-16 flex items-center gap-4">
         <Marca />
         <nav className="hidden md:flex items-center gap-1 ml-4" aria-label="Principal">
@@ -152,7 +152,7 @@ function Cabecalho() {
 
 function Rodape() {
   return (
-    <footer className="mt-24 bg-mar-escuro text-white/85">
+    <footer className="mt-24 bg-mar-escuro text-white/85 pb-[env(safe-area-inset-bottom)]">
       <div className="mx-auto max-w-6xl px-4 py-12 grid gap-10 sm:grid-cols-[1.4fr_1fr_1fr]">
         <div>
           <p className="font-display text-3xl font-black text-white">ISAC Market</p>

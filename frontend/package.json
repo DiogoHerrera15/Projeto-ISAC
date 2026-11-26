@@ -7,9 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "vitest run"
+    "test": "vitest run",
+    "app:build": "vite build && cap sync ios",
+    "app:ios": "cap open ios"
   },
   "dependencies": {
+    "@capacitor/core": "^8.6.3",
+    "@capacitor/ios": "^8.6.3",
+    "@capacitor/preferences": "^8.0.1",
     "@fontsource/big-shoulders-display": "^5.3.0",
     "@fontsource/figtree": "^5.3.0",
     "react": "^19.3.1",
@@ -17,6 +22,7 @@
     "react-router-dom": "^7.18.4"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.6.3",
     "@tailwindcss/vite": "^4.3.3",
     "@vitejs/plugin-react": "^6.1.2",
     "tailwindcss": "^4.3.3",

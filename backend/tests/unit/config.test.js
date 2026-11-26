@@ -20,3 +20,13 @@ test('APP_ORIGIN aceita lista de origens exatas e TRUST_PROXY é validado', () =
   assert.throws(() => readConfig({ ...base, APP_ORIGIN: 'http://localhost:5173,https://x.dev/' }), /APP_ORIGIN/)
   assert.throws(() => readConfig({ ...base, APP_ORIGIN: 'http://localhost:5173', TRUST_PROXY: 'sim' }), /TRUST_PROXY/)
 })
+
+test('APP_NATIVE_ORIGINS: padrão do app iOS, lista própria, desligado e inválido', () => {
+  const base = { DATABASE_URL: 'postgres://localhost/isac', APP_ORIGIN: 'http://localhost:5173' }
+  assert.deepEqual(readConfig(base).appNativeOrigins, ['capacitor://localhost'])
+  assert.deepEqual(readConfig({ ...base, APP_NATIVE_ORIGINS: 'capacitor://localhost, https://localhost' }).appNativeOrigins,
+    ['capacitor://localhost', 'https://localhost'])
+  assert.deepEqual(readConfig({ ...base, APP_NATIVE_ORIGINS: '' }).appNativeOrigins, [])
+  assert.throws(() => readConfig({ ...base, APP_NATIVE_ORIGINS: 'capacitor://localhost/' }), /APP_NATIVE_ORIGINS/)
+  assert.throws(() => readConfig({ ...base, APP_NATIVE_ORIGINS: '*' }), /APP_NATIVE_ORIGINS/)
+})

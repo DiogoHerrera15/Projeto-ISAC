@@ -94,6 +94,7 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 |---|---|
 | **React + Vite** | Interface web e funcionalidades do site. |
 | **Tailwind CSS** | Estilização responsiva para computadores e celulares. |
+| **Capacitor** | Empacota o frontend como aplicativo iOS (pasta `frontend/ios`). |
 | **Node.js 24 + Express 5** | API do backend (`/api/v1`): autenticação por sessão, catálogo, carrinho, pedidos, comissões e administração. |
 | **PostgreSQL 17** | Banco de dados do backend (migração em `backend/migrations`). |
 | **SQL legado do Supabase** | Referência histórica em `database/`; não é executado pela aplicação atual. |
@@ -138,6 +139,28 @@ npm run dev                  # site em http://localhost:5173
 O Vite encaminha `/api` para o backend. O backend só aceita ações de gravação (login, carrinho, pedidos) vindas do endereço exato configurado em `APP_ORIGIN` no `backend/.env` (por padrão `http://localhost:5173`); abra o site por esse mesmo endereço. Se aparecer *"Origem da requisição não permitida"*, o endereço da barra do navegador é diferente do `APP_ORIGIN`. Em ambientes remotos (como o GitHub Codespaces), use no `APP_ORIGIN` o endereço público da porta 5173; é possível listar vários endereços separados por vírgula, e o backend registra no terminal a linha `Origem recusada: ...` quando algo não bate.
 
 > Para apresentar o projeto, veja o [roteiro de apresentação](docs/ROTEIRO_APRESENTACAO.md).
+
+### Aplicativo para iPhone (Capacitor)
+
+O mesmo código do site vira um aplicativo iOS (projeto em `frontend/ios`, gerado com o [Capacitor](https://capacitorjs.com)). O app guarda a sessão como um **token** no aparelho (o site continua usando cookie) e conversa com o backend pela rede.
+
+Requisitos: Mac com **Xcode** (App Store; inclui o simulador do iPhone) e o backend rodando.
+
+```bash
+cd backend && npm run dev          # terminal 1: backend em http://localhost:3001
+cd frontend
+npm install
+npm run app:build                  # gera o site e copia para o projeto iOS
+npm run app:ios                    # abre o projeto no Xcode
+```
+
+No Xcode, escolha um iPhone no topo (por exemplo *iPhone 16*) e clique em **Run** (▶). No **simulador**, o app já fala com `http://localhost:3001` (o próprio Mac). Entre com as contas de exemplo (senha `isac1234`).
+
+Num **iPhone de verdade**: em *Signing & Capabilities* escolha seu Apple ID (*Team*), conecte o aparelho, deixe-o na mesma rede Wi-Fi do Mac e, no app, abra **Entrar → Configurar servidor** e informe `http://IP-DO-SEU-MAC:3001` (veja o IP em *Ajustes do Sistema → Wi-Fi*). O iOS vai perguntar se o app pode usar a rede local: aceite.
+
+Depois de mudar o código do frontend, rode `npm run app:build` de novo e execute no Xcode.
+
+Como funciona por dentro: o app envia `X-ISAC-Client: app` e `Authorization: Bearer <token>`; o backend libera o CORS só para a origem `capacitor://localhost` (`APP_NATIVE_ORIGINS`), devolve o token no login (sem cookie) e ignora cookies nesse modo. Limitações desta versão: o token fica nas preferências do app (para publicar, trocar por armazenamento seguro/Keychain), a conexão local é HTTP (em produção use HTTPS) e o link de "esqueci minha senha" abre no navegador do aparelho.
 
 ### Modo demonstração (sem backend)
 
@@ -207,6 +230,7 @@ Projeto-ISAC/
 │   ├── tests/               # testes unitários e de integração
 │   └── compose.yaml         # PostgreSQL local (Docker)
 ├── frontend/                # site em React + Vite + Tailwind
+│   └── ios/                 # aplicativo iPhone (Capacitor)
 │   └── src/services/        # backendApi e demoApi
 ├── database/                # SQL e diagrama do modelo (versão Supabase)
 ├── .github/workflows/       # verificação automática (CI)
