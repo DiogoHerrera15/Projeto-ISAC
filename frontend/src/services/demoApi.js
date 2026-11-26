@@ -130,7 +130,7 @@ export const demoApi = {
     const base = db()
     email = email.trim().toLowerCase()
     if (base.usuarios.some((u) => u.email === email)) throw new Error('User already registered')
-    if (senha.length < 6) throw new Error('Password should be at least 6 characters')
+    if (senha.length < 8) throw new Error('Password should be at least 8 characters')
     const id = uid()
     base.usuarios.push({ id, email, senha })
     base.perfis.push({ id, nome: nome.trim(), telefone: telefone || null, administrador: false, criado_em: agora() })
@@ -148,6 +148,33 @@ export const demoApi = {
 
   async sair() {
     definirSessao(null)
+  },
+
+  async alterarSenha({ senhaAtual, novaSenha }) {
+    await espera()
+    const usuario = db().usuarios.find((u) => u.id === usuarioAtual().id)
+    if (!usuario || usuario.senha !== senhaAtual) throw new Error('A senha atual está incorreta.')
+    if (novaSenha.length < 8) throw new Error('Password should be at least 8 characters')
+    if (novaSenha === senhaAtual) throw new Error('A nova senha deve ser diferente da atual.')
+    usuario.senha = novaSenha
+    salvar()
+  },
+
+  // Não há e-mail no modo demonstração: devolvemos o link para a tela mostrá-lo.
+  async solicitarRecuperacao(email) {
+    await espera()
+    const usuario = db().usuarios.find((u) => u.email === email.trim().toLowerCase())
+    return { linkDemonstracao: usuario ? `/redefinir-senha?token=demo-${encodeURIComponent(usuario.email)}` : null }
+  },
+
+  async redefinirSenha({ token, novaSenha }) {
+    await espera()
+    const email = token.startsWith('demo-') ? decodeURIComponent(token.slice(5)) : ''
+    const usuario = db().usuarios.find((u) => u.email === email)
+    if (!usuario) throw new Error('Este link é inválido ou expirou. Peça um novo.')
+    if (novaSenha.length < 8) throw new Error('Password should be at least 8 characters')
+    usuario.senha = novaSenha
+    salvar()
   },
 
   async obterPerfil(id) {

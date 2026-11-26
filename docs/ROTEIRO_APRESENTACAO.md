@@ -87,6 +87,7 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 - **GitHub Actions** (aba *Actions* do repositório): testes do backend, testes do frontend e build do frontend rodam a cada alteração.
 - **Backend em camadas** (rotas, controlador, serviço, repositório), com um teste que impede a camada HTTP de executar SQL.
 - **Regras críticas testadas**: dois clientes disputando a última unidade geram um só pedido; repetir o checkout não duplica o pedido; o valor e a comissão ficam gravados no momento da compra.
+- **Senha**: em **Entrar → Esqueci minha senha** o link aparece no terminal do backend (em desenvolvimento); em **Minha conta → Alterar senha** a troca desconecta os outros aparelhos.
 - **Segurança**: senha com scrypt, cookie HttpOnly, proteção de origem, limite de tentativas de login, upload de imagem conferido pelo conteúdo.
 
 ## 3. Perguntas prováveis
@@ -106,7 +107,7 @@ Se aparecer *"Origem da requisição não permitida"*, procure no terminal do ba
 ## 4. Limitações conhecidas (diga com franqueza)
 
 - O frontend foi ligado ao backend há pouco tempo; o fluxo completo está sendo validado em um ambiente remoto (Codespaces), onde o endereço do site precisa coincidir com o `APP_ORIGIN`.
-- Não há recuperação nem troca de senha, nem confirmação de e-mail.
+- Não há confirmação de e-mail no cadastro. A recuperação de senha só envia e-mail de verdade com um servidor SMTP configurado (`SMTP_URL`); sem ele, o link aparece no terminal do backend.
 - As fotos ficam em disco local; em hospedagem seria preciso armazenamento externo.
 - Os testes automatizados do frontend cobrem a camada de serviços e o cálculo de valores; as telas (componentes React) ainda não têm testes.
 - As categorias são uma lista fixa (migration 002); ainda não há tela para a administração criá-las ou editá-las.

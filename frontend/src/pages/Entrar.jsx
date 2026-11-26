@@ -53,6 +53,11 @@ export default function Entrar() {
           value={senha}
           onChange={(e) => setSenha(e.target.value)}
         />
+        <p className="-mt-2 text-sm">
+          <Link to="/esqueci-senha" className="font-bold text-mar underline underline-offset-4">
+            Esqueci minha senha
+          </Link>
+        </p>
         {erro && <Aviso tipo="erro">{erro}</Aviso>}
         <Botao type="submit" tamanho="g" className="w-full" carregando={enviando}>
           Entrar

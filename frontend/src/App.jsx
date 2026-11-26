@@ -10,6 +10,8 @@ import Loja from './pages/Loja'
 import Carrinho from './pages/Carrinho'
 import Entrar from './pages/Entrar'
 import Cadastrar from './pages/Cadastrar'
+import EsqueciSenha from './pages/EsqueciSenha'
+import RedefinirSenha from './pages/RedefinirSenha'
 import MeusPedidos from './pages/MeusPedidos'
 import PedidoDetalhe from './pages/PedidoDetalhe'
 import Conta from './pages/Conta'
@@ -31,6 +33,8 @@ export default function App() {
               <Route path="carrinho" element={<Carrinho />} />
               <Route path="entrar" element={<Entrar />} />
               <Route path="cadastrar" element={<Cadastrar />} />
+              <Route path="esqueci-senha" element={<EsqueciSenha />} />
+              <Route path="redefinir-senha" element={<RedefinirSenha />} />
               <Route path="pedidos" element={<Protegida><MeusPedidos /></Protegida>} />
               <Route path="pedidos/:id" element={<Protegida><PedidoDetalhe /></Protegida>} />
               <Route path="conta" element={<Protegida><Conta /></Protegida>} />

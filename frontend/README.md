@@ -56,9 +56,10 @@ A faixa amarela no topo tem o botão **Restaurar dados de exemplo**.
 | `/lojas/:id` | Todos | Página pública da loja: descrição e produtos (loja fechada só para a dona e a administração) |
 | `/carrinho` | Todos | Carrinho agrupado por loja; finalização pela API Node.js |
 | `/entrar`, `/cadastrar` | Visitantes | Login e criação de conta pela API Node.js |
+| `/esqueci-senha`, `/redefinir-senha` | Visitantes | Pedido do link de recuperação e escolha da nova senha (o link vem por e-mail) |
 | `/pedidos` | Cliente | Pedidos com status; cancelamento de pendentes pela API Node.js |
 | `/pedidos/:id` | Cliente, vendedora, administrador | Detalhe do pedido: itens, status, datas e divisão entre loja e ISAC (a vendedora vê só os itens dela) |
-| `/conta` | Logado | Nome e telefone (as lojas usam o telefone para combinar entrega) |
+| `/conta` | Logado | Nome, telefone e troca de senha (as lojas usam o telefone para combinar entrega) |
 | `/minha-loja` | Vendedor | Abre a loja, cadastra produtos com foto e categoria, consulta os itens vendidos pela sua loja |
 | `/admin` | Administrador | Relatório de vendas confirmadas por período e por loja (gráfico, tabela e CSV), pedidos com confirmação simulada, lojas, produtos e taxa |
 

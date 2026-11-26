@@ -26,8 +26,12 @@ export async function criarCenario(t) {
   await runMigration()
   const uploadDir = await mkdtemp(join(tmpdir(), 'isac-images-'))
   t.after(() => rm(uploadDir, { recursive: true, force: true }))
-  const config = { appOrigin: 'http://localhost:5173', sessionTtlSeconds: 604800, production: false, uploadDir }
-  const app = createApp({ pool, config })
+  const config = {
+    appOrigin: 'http://localhost:5173', sessionTtlSeconds: 604800, resetTtlSeconds: 3600, production: false, uploadDir,
+  }
+  // Em vez de enviar e-mail de verdade, guarda o que seria enviado para os testes lerem (ex.: o link de recuperação).
+  const mailer = { enviados: [], async send(mensagem) { this.enviados.push(mensagem) } }
+  const app = createApp({ pool, config, mailer })
   const ids = {}
   const cookies = {}
   const roles = ['cliente', 'outroCliente', 'vendedorA', 'vendedorB', 'admin']
@@ -70,6 +74,7 @@ export async function criarCenario(t) {
     app,
     pool,
     config,
+    mailer,
     ids,
     como: (role) => browser(role),
     anonimo: () => browser(null),

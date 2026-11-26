@@ -67,6 +67,30 @@ test('informa a interface quando o servidor revoga a sessão', async () => {
   removerOuvinte()
 })
 
+test('troca e recuperação de senha chamam as rotas certas com corpo JSON', async () => {
+  fetch
+    .mockResolvedValueOnce(responder(204, null))
+    .mockResolvedValueOnce(responder(200, { data: { enviado: true } }))
+    .mockResolvedValueOnce(responder(204, null))
+    .mockResolvedValueOnce(responder(400, { error: { code: 'TOKEN_INVALIDO', message: 'Este link é inválido ou expirou.' } }))
+
+  await expect(api.alterarSenha({ senhaAtual: 'antiga-123', novaSenha: 'nova-senha-456' })).resolves.toBeUndefined()
+  await expect(api.solicitarRecuperacao('ana@exemplo.com')).resolves.toEqual({})
+  await expect(api.redefinirSenha({ token: 'abc', novaSenha: 'nova-senha-456' })).resolves.toBeUndefined()
+  await expect(api.redefinirSenha({ token: 'velho', novaSenha: 'nova-senha-456' })).rejects.toMatchObject({
+    status: 400, codigo: 'TOKEN_INVALIDO',
+  })
+
+  const chamadas = fetch.mock.calls.map(([url, opcoes]) => [url.pathname, opcoes.method, JSON.parse(opcoes.body)])
+  expect(chamadas).toEqual([
+    ['/api/v1/auth/senha', 'POST', { senhaAtual: 'antiga-123', novaSenha: 'nova-senha-456' }],
+    ['/api/v1/auth/recuperacao', 'POST', { email: 'ana@exemplo.com' }],
+    ['/api/v1/auth/redefinicao', 'POST', { token: 'abc', novaSenha: 'nova-senha-456' }],
+    ['/api/v1/auth/redefinicao', 'POST', { token: 'velho', novaSenha: 'nova-senha-456' }],
+  ])
+  expect(fetch.mock.calls[0][1].headers['X-ISAC-Client']).toBe('web')
+})
+
 test('converte valores monetários do relatório administrativo para as telas', async () => {
   fetch.mockResolvedValue(responder(200, { data: {
     de: '2026-11-01', ate: '2026-11-30', agrupar: 'mes',

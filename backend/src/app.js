@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import { errorHandler, HttpError } from './http/errors.js'
 import { requireSameOrigin } from './http/origin.js'
 import { createSecurityHeaders } from './http/headers.js'
+import { createMailer } from './mail/mailer.js'
 import { registerAuthRoutes } from './modules/auth/routes.js'
 import { registerProfileRoutes } from './modules/perfis/routes.js'
 import { registerCatalogRoutes } from './modules/catalogo/routes.js'
@@ -14,7 +15,7 @@ import { registerSalesRoutes } from './modules/lojas/routes.js'
 import { registerAdminRoutes } from './modules/admin/routes.js'
 import { registerImageRoutes } from './modules/imagens/routes.js'
 
-export function createApp({ pool, storage, config } = {}) {
+export function createApp({ pool, storage, config, mailer = createMailer(config ?? {}) } = {}) {
   const app = express()
   app.disable('x-powered-by')
   if (config.trustProxy) app.set('trust proxy', config.trustProxy)
@@ -25,7 +26,7 @@ export function createApp({ pool, storage, config } = {}) {
   app.use(express.json({ limit: '64kb' }))
   app.use('/api/v1', requireSameOrigin(config.appOrigins ?? config.appOrigin))
   app.get('/api/v1/health', (_req, res) => res.json({ data: { status: 'ok' } }))
-  registerAuthRoutes(app, pool, config)
+  registerAuthRoutes(app, pool, config, mailer)
   registerProfileRoutes(app, pool)
   registerCatalogRoutes(app, pool)
   registerStoreRoutes(app, pool)

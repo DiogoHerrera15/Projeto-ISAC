@@ -153,6 +153,21 @@ export const backendApi = {
     definirUsuario(null)
   },
 
+  // Troca de senha de quem está logado; as outras sessões da conta são encerradas pelo servidor.
+  async alterarSenha({ senhaAtual, novaSenha }) {
+    await requisicao('POST', '/auth/senha', { corpo: { senhaAtual, novaSenha } })
+  },
+
+  // A resposta é sempre a mesma, exista ou não a conta (o link vai por e-mail).
+  async solicitarRecuperacao(email) {
+    await requisicao('POST', '/auth/recuperacao', { corpo: { email } })
+    return {}
+  },
+
+  async redefinirSenha({ token, novaSenha }) {
+    await requisicao('POST', '/auth/redefinicao', { corpo: { token, novaSenha } })
+  },
+
   async obterPerfil() {
     return (await requisicao('GET', '/perfil')).data
   },

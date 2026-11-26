@@ -20,6 +20,11 @@ export function readConfig(env = process.env) {
   // em hospedagens para o limite de tentativas enxergar o IP real de cada pessoa.
   const trustProxy = env.TRUST_PROXY ? Number(env.TRUST_PROXY) : 0
   if (!Number.isInteger(trustProxy) || trustProxy < 0 || trustProxy > 10) throw new Error('TRUST_PROXY inválido')
+  // Validade do link de "esqueci minha senha" (padrão: 1 hora).
+  const resetTtlSeconds = Number(env.RESET_TTL_SECONDS || 3600)
+  if (!Number.isInteger(resetTtlSeconds) || resetTtlSeconds < 60 || resetTtlSeconds > 86400) {
+    throw new Error('RESET_TTL_SECONDS inválido (entre 60 e 86400)')
+  }
   return {
     databaseUrl: env.DATABASE_URL,
     migrationDatabaseUrl: env.MIGRATION_DATABASE_URL || env.DATABASE_URL,
@@ -28,6 +33,11 @@ export function readConfig(env = process.env) {
     trustProxy,
     port,
     sessionTtlSeconds,
+    resetTtlSeconds,
+    // E-mail: sem SMTP_URL (ex.: smtps://usuario:senha@smtp.exemplo.com), o link de
+    // recuperação só aparece no terminal do backend em desenvolvimento.
+    smtpUrl: env.SMTP_URL || null,
+    mailFrom: env.MAIL_FROM || 'ISAC Market <nao-responda@isac.local>',
     production: env.NODE_ENV === 'production',
     uploadDir: env.UPLOAD_DIR || './uploads',
     frontendDist: env.FRONTEND_DIST ? resolve(env.FRONTEND_DIST) : null,

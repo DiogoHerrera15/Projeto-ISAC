@@ -77,7 +77,7 @@ A primeira versão foi delimitada para ser funcional sem depender de integraçõ
 
 | Área | Funcionalidades |
 |---|---|
-| **Acesso** | Cadastro e autenticação de usuários. |
+| **Acesso** | Cadastro, autenticação, troca de senha e recuperação de senha por e-mail. |
 | **Vendedores** | Cadastro de loja e gerenciamento de produtos. |
 | **Catálogo** | Listagem de produtos com imagens, busca enquanto digita, filtro por loja e por categoria, ordenação por preço e "Carregar mais". |
 | **Lojas** | Página pública de cada loja (`/lojas/:id`) com descrição e produtos. |
@@ -116,6 +116,8 @@ npm run db:seed -- --demo    # contas, lojas e produtos fictícios (senha isac12
 npm run dev                  # API em http://localhost:3001
 ```
 
+Para a recuperação de senha enviar e-mails de verdade, configure `SMTP_URL` e `MAIL_FROM` no `backend/.env` (veja `.env.example`). Sem isso, em desenvolvimento o e-mail (com o link) aparece no terminal do backend.
+
 Contas de exemplo: `cliente@exemplo.com`, `lucia@exemplo.com` (vendedora) e `admin@isac.org` (administração).
 
 Testes automatizados (precisam do PostgreSQL do `compose.yaml` no ar):
@@ -148,6 +150,7 @@ Todas as rotas ficam em `/api/v1` e respondem JSON no formato `{ "data": ... }` 
 | Área | Rotas principais |
 |---|---|
 | **Acesso** | `POST /auth/cadastro`, `POST /auth/login`, `GET /auth/sessao`, `POST /auth/logout` |
+| **Senha** | `POST /auth/senha` (logado: senha atual + nova), `POST /auth/recuperacao` (envia o link por e-mail), `POST /auth/redefinicao` (token do link + nova senha) |
 | **Perfil** | `GET/PATCH /perfil` |
 | **Catálogo (público)** | `GET /produtos` (filtros `busca`, `lojaId`, `categoria`, `ordem`=`recentes`/`menor`/`maior`/`nome`, paginação `pagina`/`limite`), `GET /produtos/:id`, `GET /categorias`, `GET /lojas`, `GET /lojas/:id`, `GET /configuracoes/comissao` |
 | **Carrinho** | `GET /carrinho`, `PUT/DELETE /carrinho/itens/:produtoId` |
@@ -239,6 +242,7 @@ Controles já implementados no backend:
 - Upload de fotos limitado a JPG, PNG e WebP (até 5 MB), com conferência do conteúdo real do arquivo.
 - Limite de tentativas de login que só conta os erros (logins corretos não bloqueiam quem divide o mesmo IP).
 - Em produção (`NODE_ENV=production`) a API também envia `Strict-Transport-Security` e uma política de conteúdo (CSP) restritiva.
+- Troca de senha (encerra as outras sessões) e recuperação por link de uso único, com validade curta (1 h) e guardado só como hash; a resposta é igual para e-mails cadastrados ou não.
 - Limpeza automática a cada 6 horas de sessões vencidas e fotos órfãs (também disponíveis em `npm run sessions:clean` e `npm run images:clean`).
 
 Observações:
