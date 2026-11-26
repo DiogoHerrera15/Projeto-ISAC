@@ -6,7 +6,15 @@ import { cleanOrphanImages } from './modules/imagens/cleanup.js'
 
 const config = readConfig()
 const pool = createPool(config.databaseUrl)
-const server = createApp({ pool, config }).listen(config.port, () => {
+// No Express 5 o callback do listen também recebe o erro (ex.: porta já em uso).
+// Sem esta checagem o servidor avisava "API em ..." e encerrava em silêncio.
+const server = createApp({ pool, config }).listen(config.port, (error) => {
+  if (error) {
+    console.error(error.code === 'EADDRINUSE'
+      ? `A porta ${config.port} já está em uso. Feche o outro servidor (ou mude PORT no .env) e tente de novo.`
+      : `Não foi possível iniciar a API: ${error.message}`)
+    process.exit(1)
+  }
   console.log(`ISAC Market API em http://localhost:${config.port}`)
 })
 
