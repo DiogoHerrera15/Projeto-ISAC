@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ISAC Market | Pitch</title>
+<style>
+:root { --azul:#0e4d5c; --amarelo:#f2b705; --papel:#faf7ef; --verde:#e3efeb; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--verde); color:#152f35; font:18px/1.5 system-ui,sans-serif; }
+main { width:min(100% - 2rem, 1040px); margin:2rem auto; }
+section { padding:clamp(1.5rem,5vw,4rem); margin:0 0 1.5rem; background:var(--papel); min-height: min(52vw, 490px); }
+.capa { background:var(--azul); color:white; display:grid; align-content:center; }
+h1,h2,h3,p { margin:0 0 .65em; }
+h1 { font-size:clamp(2.8rem,8vw,6rem); line-height:1; }
+h2 { font-size:clamp(1.8rem,4vw,3rem); line-height:1.12; color:var(--azul); }
+section::before { content:''; display:block; width:3rem; height:.4rem; background:var(--amarelo); margin-bottom:1.4rem; }
+.grade { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,9rem),1fr)); gap:1rem; margin:1.5rem 0; }
+.grade > * { background:var(--verde); padding:1rem; border-top:4px solid var(--azul); }
+ol,ul { padding-left:1.5rem; }
+ol.grade { padding-left:0; list-style-position:inside; }
+.barra { display:flex; height:1.15rem; margin-top:1.8rem; background:var(--azul); }
+.barra span { width:5%; margin-left:auto; background:var(--amarelo); }
+.valor { display:block; font-weight:800; color:var(--azul); font-size:clamp(1.5rem,5vw,3.3rem); }
+small { display:block; }
+a { color:#0e4d5c; }
+@media print { @page {size:landscape;margin:0;} body {print-color-adjust:exact;} main {width:100%;margin:0;} section {margin:0;min-height:100vh;break-after:page;} section:last-child {break-after:auto;} .apoio {display:none;} }
+</style>
+</head>
+<body>
+<main>
+<section class="capa">
+<h1>ISAC Market</h1>
+<p>Uma vitrine digital para o comércio local do Cabo</p>
+<small>Pitch do protótipo acadêmico</small>
+</section>
+<section>
+<h2>Como encontrar quem vende perto?</h2>
+<p>O marketplace reúne produtos de pequenos vendedores da comunidade do Cabo.</p>
+<div class="grade">
+<div><h3>Quem vende</h3>Publica seus produtos em uma loja digital.</div>
+<div><h3>Quem compra</h3>Descobre lojas locais e reúne itens em um pedido.</div>
+<div><h3>ISAC</h3>Acompanha as vendas confirmadas e as comissões.</div>
+</div>
+</section>
+<section>
+<h2>De duas lojas a um pedido</h2>
+<p>O cliente acompanha a compra. Cada vendedor vê os itens da própria loja.</p>
+<ol class="grade">
+<li><strong>Catálogo</strong><br>Busca, filtros e páginas de loja</li>
+<li><strong>Carrinho</strong><br>Itens agrupados por loja</li>
+<li><strong>Pedido</strong><br>Registro com status pendente</li>
+<li><strong>Painel ISAC</strong><br>Confirmação simulada e relatório</li>
+</ol>
+</section>
+<section>
+<h2>Como o ISAC pode gerar receita</h2>
+<p>Exemplo ilustrativo de uma venda confirmada de R$ 50,00.</p>
+<div class="barra" aria-hidden="true"><span></span></div>
+<div class="grade">
+<div><strong class="valor">R$ 47,50</strong>Para quem vende</div>
+<div><strong class="valor">R$ 2,50</strong>Para o ISAC</div>
+</div>
+<small>A comissão ilustrativa de 5% é ajustável e precisa ser validada com o ISAC e os vendedores.</small>
+</section>
+<section>
+<h2>Demonstração do protótipo</h2>
+<p>O modo demonstração usa dados fictícios.</p>
+<div class="grade">
+<div><h3>Cliente</h3>Adicione produtos de duas lojas e abra o pedido pendente.</div>
+<div><h3>Vendedora</h3>Abra Minha loja e mostre como cadastrar um produto.</div>
+<div><h3>Administração</h3>Simule a confirmação do pagamento e mostre os totais no painel.</div>
+</div>
+<p>O painel permite consultar vendas por período e exportar os dados em CSV.</p>
+</section>
+<section>
+<h2>O próximo passo é testar no Cabo</h2>
+<p>O fluxo integrado ainda está em validação. Propomos um piloto com vendedores locais e o ISAC.</p>
+<ul>
+<li>Os vendedores conseguem cadastrar produtos com facilidade?</li>
+<li>Os clientes conseguem concluir um pedido?</li>
+<li>Qual comissão é viável para os vendedores e o ISAC?</li>
+</ul>
+<div class="apoio">
+<details>
+<summary>Roteiro de fala para 4 a 5 minutos com demonstração</summary>
+<p>Imagine que você está organizando uma festa no Cabo e quer encomendar doces de alguém da comunidade. Se você já conhece uma vendedora, é fácil. Mas, se não conhece, por onde começa? Agora pense na Lúcia, uma vendedora fictícia da nossa demonstração. Ela tem bons produtos, mas precisa que novos clientes descubram que a loja dela existe. Foi para facilitar esse encontro que desenvolvemos o ISAC Market.</p>
+<p>Vou mostrar como funciona. Aqui no catálogo, eu encontro os doces da Lúcia e um produto de artesanato de outra loja. Posso colocar os dois no carrinho e registrar um único pedido. No detalhe do pedido, eu acompanho o status da compra. Cada vendedor acompanha os itens da própria loja.</p>
+<p>E onde entra o ISAC? Numa venda de R$ 50, uma comissão ilustrativa de 5% corresponderia a R$ 2,50 para o ISAC e R$ 47,50 para quem vendeu. Vou simular a confirmação do pagamento no painel. A partir daí, a venda entra nos totais e a administração consegue acompanhar o valor registrado em comissões.</p>
+<p>O próximo passo é fazer um piloto com vendedores do Cabo e com o ISAC para avaliar se o cadastro é simples, se os clientes conseguem concluir pedidos e se a comissão é viável. Queremos que mais pessoas encontrem quem já vende no Cabo e que essas vendas possam ajudar a financiar as atividades do ISAC.</p>
+</details>
+<p><a href="ROTEIRO_APRESENTACAO.md">Como preparar a demonstração</a></p>
+</div>
+</section>
+</main>
+</body>
+</html>
